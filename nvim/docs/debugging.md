@@ -1,62 +1,80 @@
 # Debugging
 
-All DAP wiring lives in `lua/plugins/dap.lua`.
+DAP comes from LazyVim's `dap.core` extra plus the per-language extras
+(`lang.clangd` for codelldb, `lang.python` for debugpy, `lang.java` for
+java-debug + java-test). All four are enabled in `lazyvim.json`.
 
 ## Stack
+
+Pulled in by `lazyvim.plugins.extras.dap.core`:
 
 - **mfussenegger/nvim-dap** — core DAP client.
 - **rcarriga/nvim-dap-ui** + **nvim-neotest/nvim-nio** — windowed UI.
 - **theHamsta/nvim-dap-virtual-text** — inline value annotations.
-- **jay-babu/mason-nvim-dap.nvim** — ensures `codelldb`, `javadbg`, `javatest` are installed via Mason (`dap.lua:26-30`).
+- **jay-babu/mason-nvim-dap.nvim** — Mason wrapper for DAP adapters.
 
-## C / C++ (codelldb)
+Adapters are added by the language extras:
 
-Adapter wired at `dap.lua:54-65`. The path is constructed directly from Mason's data dir — **Mason 2.0 removed `get_install_path()`**, so the config uses:
+- **`lang.clangd`** — `codelldb` for C / C++ / Rust.
+- **`lang.python`** — `debugpy` for Python.
+- **`lang.java`** — `java-debug` + `java-test`, merged into the jdtls
+  session by `nvim-jdtls`.
 
-```lua
-vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/adapter/codelldb"
-```
+## Keymaps
 
-Launch configuration for both `cpp` and `c` (`dap.lua:67-81`) prompts for the executable:
+LazyVim's standard `<leader>d*` group from `dap.core`:
 
-```
-Executable: /path/to/cwd/
-```
+| Keys           | Action                          |
+|----------------|---------------------------------|
+| `<leader>db`   | Toggle breakpoint               |
+| `<leader>dB`   | Conditional breakpoint          |
+| `<leader>dc`   | Continue                        |
+| `<leader>dC`   | Run to cursor                   |
+| `<leader>di`   | Step into                       |
+| `<leader>do`   | Step over                       |
+| `<leader>dO`   | Step out                        |
+| `<leader>dt`   | Terminate                       |
+| `<leader>dr`   | Toggle REPL                     |
+| `<leader>dl`   | Run last                        |
+| `<leader>du`   | Toggle DAP UI                   |
+| `<leader>dw`   | Widgets (hover scope)           |
 
-Point it at the binary produced by `<leader>rc` or a `g++`/`gcc` compile. `stopOnEntry` is off, `cwd` is `${workspaceFolder}`.
+Reference: <https://www.lazyvim.org/extras/dap/core>.
 
-For a typical CP workflow:
+## Typical C/C++ session
 
-1. Compile with debug info (the default `-O2` in the runner is fine for simple cases but hides locals — compile manually with `-O0 -g` if you need clean stepping).
-2. `<leader>du` to open DAP UI.
-3. `<leader>db` on the line you want to break.
-4. `<leader>dc` → enter the binary path.
+The fast path uses **`<leader>rD`** (defined in `lua/plugins/cpp.lua`):
+it writes the buffer, recompiles the current file with
+`-O0 -g3 -DLOCAL` plus the bundled `bits/stdc++.h` include path, then
+launches **codelldb**. If `input.txt` / `in.txt` / `stdin.txt` lives next
+to the source, it's piped on the debuggee's stdin automatically — no
+manual `args` editing.
 
-## DAP UI layout
+1. Set a breakpoint on the suspect line: `<leader>db`.
+2. `<leader>rD` — recompiles `-g3` and launches codelldb.
+3. `<leader>du` to bring up the DAP UI (scopes / stack / watches / REPL).
+4. Step with `<leader>do` (over) / `<leader>di` (into) / `<leader>dO` (out);
+   `<leader>dc` to continue.
+5. `<leader>dt` to terminate.
 
-Defined at `dap.lua:32-46`:
+If you'd rather drive it by hand, compile with `g++ -O0 -g -o app app.cpp`
+yourself and use `<leader>dc` — the `lang.clangd` extra defines a
+`Launch file` configuration that prompts for the binary path.
 
-- **Left sidebar** (width 40): scopes, breakpoints, stacks, watches.
-- **Bottom panel** (height 10): repl, console.
+## Typical Python session
 
-The UI opens automatically on launch / attach and closes on terminate / exit (listeners at `dap.lua:49-52`).
-
-## Breakpoint signs
-
-Custom glyphs at `dap.lua:84-93`:
-
-| Sign                      | Glyph | Highlight group            |
-|---------------------------|-------|----------------------------|
-| `DapBreakpoint`           | ●     | `DiagnosticSignError`      |
-| `DapBreakpointCondition`  | ◆     | `DiagnosticSignWarn`       |
-| `DapLogPoint`             | ◆     | `DiagnosticSignInfo`       |
-| `DapStopped`              | →     | `DiagnosticSignOk` + `Visual` linehl |
-| `DapBreakpointRejected`   | ●     | `DiagnosticSignHint`       |
-
-## Keybindings
-
-See [`keymaps.md`](keymaps.md#debug-leaderd-luapluginsdaplua10-21).
+`<leader>dPt` runs the test under cursor (when test extras are loaded);
+`<leader>dPr` debugs the current Python file. Plain `<leader>dc` will
+prompt for the program when no launch.json exists.
 
 ## Java
 
-`java-debug-adapter` and `java-test` are installed via `mason-tool-installer` (`lua/plugins/lsp.lua:33-34`) and merged into the jdtls session in `ftplugin/java.lua`. Use the same `<leader>d*` keys once jdtls has attached.
+Once jdtls has attached to a `.java` buffer, `<leader>dc` works the same
+way. `nvim-jdtls` integrates with `dap.core` automatically — no extra
+config needed.
+
+## DAP UI layout
+
+LazyVim's default layout: a sidebar with scopes / breakpoints / stacks /
+watches, and a bottom panel with REPL / console. Override per-machine in
+`lua/plugins/` if needed (`opts` of `rcarriga/nvim-dap-ui`).

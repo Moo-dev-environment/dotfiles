@@ -8,16 +8,15 @@ return {
   {
     "xeluxee/competitest.nvim",
     dependencies = "MunifTanjim/nui.nvim",
-    cmd = { "CompetiTest", "CompetiTestAdd", "CompetiTestEdit", "CompetiTestRun",
-            "CompetiTestReceive", "CompetiTestConvert" },
+    cmd = "CompetiTest",
     keys = {
-      { "<leader>ta", "<cmd>CompetiTestAdd<cr>", desc = "Add test case" },
-      { "<leader>te", "<cmd>CompetiTestEdit<cr>", desc = "Edit test cases" },
-      { "<leader>tR", "<cmd>CompetiTestRun<cr>", desc = "Run all test cases" },
-      { "<leader>tr", "<cmd>CompetiTestReceive testcases<cr>", desc = "Receive testcases (browser)" },
-      { "<leader>tp", "<cmd>CompetiTestReceive problem<cr>", desc = "Receive problem (browser)" },
-      { "<leader>tc", "<cmd>CompetiTestReceive contest<cr>", desc = "Receive contest (browser)" },
-      { "<leader>tu", "<cmd>CompetiTestRunNoCompile<cr>", desc = "Run (no recompile)" },
+      { "<leader>ta", "<cmd>CompetiTest add_testcase<cr>", desc = "Add test case" },
+      { "<leader>te", "<cmd>CompetiTest edit_testcase<cr>", desc = "Edit test cases" },
+      { "<leader>tR", "<cmd>CompetiTest run<cr>", desc = "Run all test cases" },
+      { "<leader>tr", "<cmd>CompetiTest receive testcases<cr>", desc = "Receive testcases (browser)" },
+      { "<leader>tp", "<cmd>CompetiTest receive problem<cr>", desc = "Receive problem (browser)" },
+      { "<leader>tc", "<cmd>CompetiTest receive contest<cr>", desc = "Receive contest (browser)" },
+      { "<leader>tu", "<cmd>CompetiTest run_no_compile<cr>", desc = "Run (no recompile)" },
     },
     opts = {
       local_config_file_name = ".competitest.lua",
@@ -34,7 +33,21 @@ return {
 
       compile_command = {
         c = { exec = "gcc", args = { "-O2", "-std=gnu17", "-Wall", "-Wextra", "-o", "$(FNOEXT)", "$(FNAME)", "-lm" } },
-        cpp = { exec = "g++", args = { "-O2", "-std=gnu++20", "-Wall", "-Wextra", "-Wshadow", "-DLOCAL", "-I" .. vim.fn.stdpath("config") .. "/include", "-o", "$(FNOEXT)", "$(FNAME)" } },
+        cpp = {
+          exec = "g++",
+          args = {
+            "-O2",
+            "-std=gnu++20",
+            "-Wall",
+            "-Wextra",
+            "-Wshadow",
+            "-DLOCAL",
+            "-I" .. vim.fn.stdpath("config") .. "/include",
+            "-o",
+            "$(FNOEXT)",
+            "$(FNAME)",
+          },
+        },
         java = { exec = "javac", args = { "$(FNAME)" } },
         python = { exec = "true" },
         rust = { exec = "rustc", args = { "-O", "$(FNAME)" } },
@@ -59,8 +72,11 @@ return {
       testcases_input_file_format = "$(FNOEXT)_input$(TCNUM).txt",
       testcases_output_file_format = "$(FNOEXT)_output$(TCNUM).txt",
 
-      received_problems_path = "$(HOME)/cp/$(JUDGE)/$(CONTEST)/$(PROBLEM).$(FEXT)",
-      received_problems_prompt_path = true,
+      -- Previous layout:
+      -- received_problems_path = "$(HOME)/cp/$(JUDGE)/$(CONTEST)/$(PROBLEM).$(FEXT)",
+      -- received_problems_prompt_path = true,
+      received_problems_path = "$(CWD)/$(PROBLEM).$(FEXT)",
+      received_problems_prompt_path = false,
       received_contests_directory = "$(HOME)/cp/$(JUDGE)/$(CONTEST)",
       received_contests_problems_path = "$(PROBLEM).$(FEXT)",
       received_contests_prompt_directory = true,

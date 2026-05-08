@@ -1,78 +1,73 @@
 # LSP
 
-The LSP stack uses the Neovim 0.11+ `vim.lsp.config` / `vim.lsp.enable` API rather than the deprecated `require("lspconfig").xxx.setup{}`. Server definitions ship as `lsp/<name>.lua` files inside nvim-lspconfig and are picked up automatically once enabled.
+LSP in this config is **driven entirely by LazyVim and its language extras**.
+There is no hand-rolled `lua/plugins/lsp.lua` here — the relevant pieces
+live in the extras enabled in `lazyvim.json`.
 
-All LSP wiring lives in `lua/plugins/lsp.lua`, except `jdtls` which is started per-buffer in `ftplugin/java.lua`.
+## Servers
 
-## Servers (managed by mason-lspconfig)
+| Server   | Source extra                  | Filetypes |
+|----------|-------------------------------|-----------|
+| `clangd` | `lang.clangd`                 | C, C++    |
+| `pyright` + `ruff` | `lang.python`       | Python    |
+| `jdtls`  | `lang.java`                   | Java      |
+| `lua_ls` | LazyVim default               | Lua       |
+| `bashls` | not enabled — add `lang.bash` if needed | sh, bash |
 
-`ensure_installed` at `lua/plugins/lsp.lua:18`:
+Mason auto-installs each server on first launch (mason-lspconfig +
+mason-tool-installer, both wired by LazyVim).
 
-| Server   | Filetypes             | Notes |
-|----------|-----------------------|-------|
-| `clangd` | C, C++                | Overridden at `lsp.lua:106-117`: `--background-index`, `--clang-tidy`, `--header-insertion=iwyu`, placeholders. Reads `~/.config/clangd/config.yaml` for the `<bits/stdc++.h>` include path. |
-| `lua_ls` | Lua                   | Overridden at `lsp.lua:119-129`: LuaJIT runtime, neovim runtime in workspace.library, `vim` global, inlay hints on. |
-| `jdtls`  | Java                  | **Not** enabled via `vim.lsp.enable` — owned by `ftplugin/java.lua`. |
-| `pyright`| Python                | Defaults. |
-| `bashls` | sh, bash              | Defaults. |
+## Formatters (conform.nvim, configured by LazyVim + extras)
 
-`vim.lsp.enable({ "clangd", "lua_ls", "pyright", "bashls" })` is called at `lsp.lua:132`.
+| Filetype | Formatter            | Comes from |
+|----------|----------------------|-----------|
+| c, cpp   | `clang-format`       | `lang.clangd` |
+| python   | `black` (+ `ruff`)   | `lang.python` |
+| java     | `google-java-format` | `lang.java` |
+| lua      | `stylua`             | LazyVim default |
+| sh       | `shfmt`              | LazyVim default |
 
-## Non-LSP tools (mason-tool-installer)
+Format-on-save is on by default. Toggles:
 
-Installed at `lsp.lua:28-37`:
+- `:LazyFormatInfo` — show what would format the current buffer.
+- `<leader>uf` — toggle global format-on-save.
+- `<leader>uF` — toggle format-on-save for the current buffer.
 
-- `clang-format`, `stylua`, `google-java-format`, `black`, `shfmt` — formatters invoked by conform.nvim.
-- `codelldb` — C/C++ debug adapter, wired in `lua/plugins/dap.lua:55-65`.
-- `java-debug-adapter`, `java-test` — bundles merged into the jdtls session in `ftplugin/java.lua`.
+Manual formatting: `<leader>cf` (LazyVim default).
 
-## Capabilities + on_attach
+## Keybindings
 
-`lsp.lua:67-72` builds capabilities from `cmp_nvim_lsp` and exposes `_G.LspCapabilities` so `ftplugin/java.lua` can feed the same caps into jdtls.
+LazyVim's standard LSP bindings apply:
 
-`_G.LspOnAttach` (`lsp.lua:75-92`) is bound by the `LspAttach` autocmd at `lsp.lua:94-100`. It sets the buffer-local LSP keymaps (see [`keymaps.md`](keymaps.md#lsp-leaderl--bare-keys-luapluginslsplua75-92)) and enables inlay hints when the server supports them.
+- `gd`, `gD`, `gr`, `gI`, `gy`, `K` — navigation / hover.
+- `<leader>ca` — code action.
+- `<leader>cr` — rename.
+- `<leader>cf` — format.
+- `<leader>cs` / `<leader>cS` — document / workspace symbols.
+- `<leader>cd` — line diagnostics.
+
+Reference: <https://www.lazyvim.org/keymaps#lsp>.
 
 ## Diagnostics UI
 
-Configured once at `lsp.lua:46-58`:
+LazyVim configures `vim.diagnostic` with virtual text, signs, and
+rounded float borders out of the box. `<leader>uD` toggles diagnostics.
 
-- Virtual text with a `●` prefix, spacing 2.
-- Rounded float border, source shown.
-- Error/Warn/Info/Hint sign glyphs.
+## Adding another language
 
-Hover and signature help are also rebound to force a rounded border (`lsp.lua:61-64`).
+Append the matching extra to `"extras"` in `lazyvim.json` and restart, e.g.
+`lazyvim.plugins.extras.lang.rust`,
+`lazyvim.plugins.extras.lang.go`,
+`lazyvim.plugins.extras.lang.bash`. Each extra defines its own LSP server,
+formatter, debugger, and (when applicable) tree-sitter parser, so a single
+line is usually all that's needed.
 
-## Format-on-save (conform.nvim)
+## Java specifics
 
-`lsp.lua:137-166`. Runs before write, LSP fallback on, 1.5 s timeout. Formatters per filetype:
+`jdtls` requires a system **JDK 21+** on `$PATH`. See
+[`troubleshooting.md`](troubleshooting.md#java-lsp-jdtls-quits-exit-1).
 
-| ft     | formatter            |
-|--------|----------------------|
-| c, cpp | `clang-format`       |
-| java   | `google-java-format` |
-| python | `black`              |
-| lua    | `stylua`             |
-| sh     | `shfmt`              |
-
-Toggles (both commands defined in `init` at `lsp.lua:158-164`):
-
-- `:FormatDisable` — disable autoformat for the session.
-- `:FormatDisable!` — disable autoformat for the current buffer only.
-- `:FormatEnable` — re-enable for both.
-
-Manual formatting:
-
-- `<leader>lf` — `vim.lsp.buf.format({ async = true })`.
-- `<leader>lF` — `conform.format({ async = true, lsp_fallback = true })`.
-
-## Java (jdtls)
-
-`ftplugin/java.lua` starts jdtls the first time a `.java` buffer loads. It:
-
-1. Resolves the launcher jar under `$MASON/packages/jdtls/` (Mason 2.0 path).
-2. Adds `java-debug-adapter` and `java-test` bundles so dap + test-running work inside the LSP session.
-3. Picks a platform config folder (`config_mac` / `config_linux` / `config_win`).
-4. Creates a per-project workspace at `stdpath("cache") .. "/jdtls/workspace/<root-name>"`.
-5. Uses `_G.LspCapabilities` and `_G.LspOnAttach` so Java shares the same keymaps and cmp capabilities as everything else.
-
-**A system JDK is required.** See [`troubleshooting.md`](troubleshooting.md#java-lsp-jdtls-quits-exit-1).
+Per-project Java workspace lives at
+`~/.local/state/nvim/jdtls/<project>/` (managed by `lang.java`). DAP for
+Java works out of the box once jdtls has attached — same `<leader>d*`
+keys as everything else.

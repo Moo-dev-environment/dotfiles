@@ -1,164 +1,55 @@
 # Keymaps
 
-Leader is `<space>`. Sources in parentheses point to the file where the binding lives — open that file for the full context.
+This page documents only the keymaps this config **adds on top of LazyVim**.
+For every other binding (`<C-h/j/k/l>`, `<S-l>/<S-h>`, `<leader>f*`,
+`<leader>g*`, `<leader>l*`, `<leader>x*`, `<leader>e`, etc.) see the LazyVim
+reference: <https://www.lazyvim.org/keymaps>.
 
-## Window & buffer (`lua/config/keymaps.lua`)
+Leader is `<space>`.
 
-| Keys             | Action                              |
-|------------------|--------------------------------------|
-| `<C-h/j/k/l>`    | Move between splits                  |
-| `<C-Up/Down>`    | Resize split vertically              |
-| `<C-Left/Right>` | Resize split horizontally            |
-| `<S-l>` / `<S-h>`| Next / previous buffer               |
-| `<leader>bd`     | Delete current buffer                |
-| `<leader>bD`     | Delete all other buffers             |
-| `<leader>sv`     | Vertical split                       |
-| `<leader>sh`     | Horizontal split                     |
-| `<leader>w`      | Save                                 |
-| `<leader>q`      | Quit all (with confirm)              |
-| `<Esc>`          | Clear search highlight               |
+## Run (custom — `lua/cp/runner.lua`, mounted in `lua/config/keymaps.lua`)
 
-Ergonomic extras (same file):
+The runner detects whether you're inside tmux. In tmux it pops the run in a
+new pane to the right (`tmux split-window -h -l 45%`). Outside tmux it falls
+back to a `:terminal` split below.
 
-- `j`/`k` respect wrapped lines when no count is given.
-- `<C-d>`/`<C-u>`/`n`/`N` keep the cursor centered.
-- Visual `J`/`K` move selected lines; `</>` keeps selection after indent; `p` in visual does not clobber the unnamed register.
+| Keys           | Action                                                 |
+|----------------|--------------------------------------------------------|
+| `<leader>rr`   | Compile and run (stdin from `input.txt` if present)    |
+| `<leader>rc`   | Compile only                                           |
+| `<leader>ri`   | Edit `input.txt`                                       |
+| `<leader>ro`   | Edit `expected_output.txt`                             |
+| `<leader>rd`   | Diff actual stdout vs `expected_output.txt`            |
+| `<leader>rD`   | Compile C/C++ with `-O0 -g3` and launch debugger (codelldb via DAP); pipes `input.txt` / `in.txt` / `stdin.txt` to stdin if present. See `lua/plugins/cpp.lua` and docs/debugging.md. |
 
-## Find (`<leader>f`, `lua/plugins/editor.lua:61-72`)
+The pane / terminal pauses on "press any key to close…" so the output stays
+visible after the program exits.
 
-| Keys           | Action                          |
-|----------------|----------------------------------|
-| `<leader>ff`   | Find files                      |
-| `<leader>fg`   | Live grep                       |
-| `<leader>fb`   | Buffers                         |
-| `<leader>fr`   | Recent files                    |
-| `<leader>fh`   | Help tags                       |
-| `<leader>fs`   | LSP document symbols            |
-| `<leader>fd`   | Diagnostics                     |
-| `<leader>fk`   | Keymaps                         |
-| `<leader>fc`   | Commands                        |
-| `<leader>ft`   | Todos (`todo-comments`)         |
-| `<leader>/`    | Fuzzy find in current buffer    |
+## Competitive-programming tests (competitest.nvim — `lua/plugins/competitest.lua`)
 
-## LSP (`<leader>l` + bare keys, `lua/plugins/lsp.lua:75-92`)
+| Keys           | Action                                              |
+|----------------|-----------------------------------------------------|
+| `<leader>ta`   | Add test case                                       |
+| `<leader>te`   | Edit test cases                                     |
+| `<leader>tR`   | Run all test cases                                  |
+| `<leader>tu`   | Run without recompiling                             |
+| `<leader>tr`   | Receive test cases (Competitive Companion browser)  |
+| `<leader>tp`   | Receive full problem (creates source from template) |
+| `<leader>tc`   | Receive entire contest                              |
 
-Bound on `LspAttach` so they only exist where a server is attached.
+## What you get from LazyVim extras (no extra config)
 
-| Keys           | Action                   |
-|----------------|---------------------------|
-| `gd`           | Go to definition          |
-| `gD`           | Go to declaration         |
-| `gr`           | References (telescope)    |
-| `gi`           | Implementation            |
-| `gy`           | Type definition           |
-| `K`            | Hover                     |
-| `<C-k>`        | Signature help            |
-| `<leader>lr`   | Rename                    |
-| `<leader>la`   | Code action               |
-| `<leader>lf`   | Format (LSP, async)       |
-| `<leader>lF`   | Format via conform.nvim   |
-| `<leader>ls`   | Document symbols          |
-| `<leader>lS`   | Workspace symbols         |
+The five enabled extras (`dap.core`, `editor.neo-tree`, `lang.clangd`,
+`lang.python`, `lang.java`) provide their own keymaps via LazyVim's
+standard groups:
 
-## Diagnostics (`lua/config/keymaps.lua:54-57`)
-
-| Keys           | Action                   |
-|----------------|---------------------------|
-| `[d` / `]d`    | Prev / next diagnostic    |
-| `<leader>cd`   | Line diagnostics (float)  |
-| `<leader>cq`   | Diagnostics to loclist    |
-
-## Git (`<leader>g`, `lua/plugins/editor.lua:102-131`)
-
-| Keys           | Action                   |
-|----------------|---------------------------|
-| `<leader>gg`   | LazyGit                   |
-| `<leader>gs`   | Stage hunk                |
-| `<leader>gr`   | Reset hunk                |
-| `<leader>gS`   | Stage buffer              |
-| `<leader>gu`   | Undo stage hunk           |
-| `<leader>gp`   | Preview hunk              |
-| `<leader>gb`   | Blame line (full)         |
-| `<leader>gd`   | Diff this                 |
-| `]h` / `[h`    | Next / prev hunk          |
-
-## Run (`<leader>r`, `lua/plugins/compile-run.lua:7-13`)
-
-Custom runner defined in `lua/cp/runner.lua`. Opens a floating toggleterm.
-
-| Keys           | Action                                      |
-|----------------|----------------------------------------------|
-| `<leader>rr`   | Compile and run (stdin from `input.txt` if present) |
-| `<leader>rc`   | Compile only                                 |
-| `<leader>ri`   | Edit `input.txt`                             |
-| `<leader>ro`   | Edit `expected_output.txt`                   |
-| `<leader>rd`   | Diff actual output vs `expected_output.txt`  |
-
-## Competitive programming tests (`<leader>t`, `lua/plugins/competitest.lua:13-21`)
-
-| Keys           | Action                              |
-|----------------|--------------------------------------|
-| `<leader>ta`   | Add test case                       |
-| `<leader>te`   | Edit test cases                     |
-| `<leader>tR`   | Run all test cases                  |
-| `<leader>tu`   | Run without recompiling             |
-| `<leader>tr`   | Receive test cases (browser)        |
-| `<leader>tp`   | Receive full problem (browser)      |
-| `<leader>tc`   | Receive contest (browser)           |
-
-## Debug (`<leader>d`, `lua/plugins/dap.lua:10-21`)
-
-| Keys           | Action                   |
-|----------------|---------------------------|
-| `<leader>db`   | Toggle breakpoint         |
-| `<leader>dB`   | Conditional breakpoint    |
-| `<leader>dc`   | Continue                  |
-| `<leader>di`   | Step into                 |
-| `<leader>do`   | Step over                 |
-| `<leader>dO`   | Step out                  |
-| `<leader>dr`   | REPL                      |
-| `<leader>dl`   | Run last                  |
-| `<leader>dt`   | Terminate                 |
-| `<leader>du`   | Toggle DAP UI             |
-
-## Trouble (`<leader>x`, `lua/plugins/editor.lua:190-195`)
-
-| Keys           | Action                             |
-|----------------|-------------------------------------|
-| `<leader>xx`   | Workspace diagnostics               |
-| `<leader>xX`   | Buffer diagnostics                  |
-| `<leader>xs`   | Symbols panel                       |
-| `<leader>xl`   | Loclist                             |
-| `<leader>xq`   | Quickfix list                       |
-
-## Explorer (`lua/plugins/ui.lua:61-64`)
-
-| Keys           | Action                 |
-|----------------|-------------------------|
-| `<leader>e`    | Toggle neo-tree         |
-| `<leader>E`    | Reveal current file     |
-
-## Treesitter textobjects (`lua/plugins/editor.lua:28-49`)
-
-| Keys           | Action                           |
-|----------------|-----------------------------------|
-| `af` / `if`    | Function outer / inner            |
-| `ac` / `ic`    | Class outer / inner               |
-| `al` / `il`    | Loop outer / inner                |
-| `aa` / `ia`    | Parameter outer / inner           |
-| `]f` / `[f`    | Next / prev function              |
-| `]c` / `[c`    | Next / prev class                 |
-| `<C-space>`    | Start / expand incremental selection |
-| `<BS>`         | Shrink incremental selection      |
-
-## Terminal (`lua/plugins/terminal.lua`)
-
-| Keys           | Action                  |
-|----------------|--------------------------|
-| `<C-\>`        | Toggle terminal          |
-
-## Misc
-
-| Keys           | Action                            |
-|----------------|------------------------------------|
-| `<leader>?`    | Which-key, buffer-local bindings   |
+- **DAP** — `<leader>d*` group (toggle breakpoint, continue, step in/over/out,
+  REPL, etc.). Reference: <https://www.lazyvim.org/extras/dap/core#keymaps>.
+- **LSP** — `gd`, `gr`, `gI`, `gy`, `K`, `<leader>ca`, `<leader>cr`,
+  `<leader>cs`, formatting. Reference:
+  <https://www.lazyvim.org/keymaps#lsp>.
+- **Test runner** (Java/Python via DAP-test integrations) — `<leader>t*` is
+  used in some lang extras for tests; that conflicts with our competitest
+  binding. Competitest wins because the spec file's `keys =` is loaded
+  later. If you want both, rename the competitest leader to e.g.
+  `<leader>cp*`.

@@ -1,37 +1,56 @@
 # Competitive programming
 
-Two complementary tools: **competitest.nvim** (test-case manager + Competitive Companion receiver) and a **custom runner** in `lua/cp/runner.lua` for quick compile-and-run against a single `input.txt`.
+Two complementary tools:
+
+- **competitest.nvim** (`lua/plugins/competitest.lua`) — graded workflow:
+  multiple test cases, parallel runs, pass/fail UI, Competitive Companion
+  integration.
+- **Custom runner** (`lua/cp/runner.lua` + `<leader>r*` keymaps in
+  `lua/config/keymaps.lua`) — debugging loop: hit one key, see stdout in a
+  tmux pane.
 
 ## Templates
 
-Auto-inserted on new-file creation by `lua/config/autocmds.lua:55-75`.
+Source files live in `~/.config/nvim/templates/`:
 
-| Filetype | Template                        | Notes |
-|----------|----------------------------------|-------|
-| `.cpp` / `.cc` / `.cxx` | `templates/cp.cpp`     | `#include <bits/stdc++.h>`, common typedefs, `solve()`, optional multi-testcase loop, `dbg(...)` macro. |
-| `.c`     | `templates/cp.c`                | C equivalent. |
-| `.java`  | `templates/Main.java`           | `__CLASSNAME__` placeholder replaced with the actual filename stem at insert time. |
-| `.py`    | `templates/cp.py`               | Wired via competitest's `template_file`; not an autocmd. |
+| File              | Used by competitest for | Notes |
+|-------------------|--------------------------|-------|
+| `cp.cpp`          | `.cpp`                   | `#include <bits/stdc++.h>`, common typedefs, `solve()`, optional multi-testcase loop, `dbg(...)` macro. |
+| `cp.c`            | `.c`                     | C equivalent. |
+| `cp.py`           | `.py`                    | Python skeleton. |
+| `Main.java`       | `.java`                  | Class name placeholder replaced at insert time. |
 
-competitest will also pick these up when it creates a file from a received problem (`template_file` at `lua/plugins/competitest.lua:69-74`).
+competitest reads these via the `template_file` table in
+`lua/plugins/competitest.lua` when receiving problems. **They are also
+auto-inserted on plain `:e new.cpp`** (and `.cc` / `.cxx`) by a
+`BufNewFile` autocmd in `lua/config/autocmds.lua`. The Java template is
+treated specially: both `$(JAVA_TASK_CLASS)` and `$(FNOEXT)` are replaced
+with the file's basename so the public class name matches the filename
+(required by `javac`) regardless of whether the file was created by
+CompetiTest or by hand.
 
-## `<bits/stdc++.h>` on Apple clang
+## `<bits/stdc++.h>`
 
-macOS clang does not ship the GCC convenience header. Three places need to know where our shim lives:
+`~/.config/nvim/include/bits/stdc++.h` is bundled. It's referenced by:
 
-1. **The shim** — `include/bits/stdc++.h`. Pulls in the full C/C++98/11/17/20 stdlib.
-2. **clangd** — `~/.config/clangd/config.yaml` adds `-I/Users/mo/.config/nvim/include` + `-std=gnu++20 -Wall -Wextra` so the LSP resolves the include.
-3. **Compile commands** — both the custom runner and competitest pass `-I<stdpath("config")>/include`:
-   - `lua/cp/runner.lua:30-34`
-   - `lua/plugins/competitest.lua:37`
+1. **competitest's compile command** for C++ (passes
+   `-I<stdpath("config")>/include` — see `lua/plugins/competitest.lua`).
+2. **The custom runner** (`lua/cp/runner.lua`).
 
-If you change the shim's path, update all three.
+On **macOS** with Apple clang the system headers don't include this file,
+so clangd will red-squiggle `#include <bits/stdc++.h>` unless you also tell
+clangd about the path. Create `~/.config/clangd/config.yaml`:
+
+```yaml
+CompileFlags:
+  Add:
+    - -I/Users/<you>/.config/nvim/include
+    - -std=gnu++20
+```
+
+On Linux with GCC the header already exists in `/usr/include/c++/<ver>/x86_64-pc-linux-gnu/bits/stdc++.h`, so the bundled shim is just a fallback.
 
 ## competitest.nvim
-
-Spec: `lua/plugins/competitest.lua`.
-
-### Commands
 
 | Keys          | Command                             | What it does |
 |---------------|-------------------------------------|---------------|
@@ -45,63 +64,83 @@ Spec: `lua/plugins/competitest.lua`.
 
 ### Test case layout
 
-Tests live **next to the source file** (not in a subdir):
+Tests live next to the source (not in a subdir):
 
 - Input:  `<stem>_input<N>.txt`
 - Output: `<stem>_output<N>.txt`
 
-Controlled at `lua/plugins/competitest.lua:57-60`.
+### Received-problem paths
 
-### Received problem paths
+- Single problem: `$(CWD)/$(PROBLEM).$(FEXT)` — lands directly in the
+  current working directory. `received_problems_prompt_path = false`,
+  so there's no path confirmation; useful for one-off problems where
+  you've already `cd`'d into the right folder.
+- Contest: `$HOME/cp/$(JUDGE)/$(CONTEST)/<problem>.$(FEXT)`. You **are**
+  prompted for the directory and extension on first use of each judge
+  (`received_contests_prompt_directory` / `received_contests_prompt_extension`).
 
-- Single problem: `$HOME/cp/$(JUDGE)/$(CONTEST)/$(PROBLEM).$(FEXT)` (`competitest.lua:62`).
-- Contest directory: `$HOME/cp/$(JUDGE)/$(CONTEST)/` with per-problem file `$(PROBLEM).$(FEXT)` (`competitest.lua:64-65`).
-- You'll be prompted to confirm the path and file extension on first use (`received_*_prompt_*` flags).
+### Compile/run defaults (from `lua/plugins/competitest.lua`)
 
-### Compile / run commands
+- **C++**: `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o $(FNOEXT) $(FNAME)`
+- **C**:   `gcc -O2 -std=gnu17 -Wall -Wextra -o $(FNOEXT) $(FNAME) -lm`
+- **Java**: `javac` then `java $(FNOEXT)`
+- **Python**: no compile, `python3 $(FNAME)` to run
+- **Rust**: `rustc -O` then `./$(FNOEXT)`
 
-At `competitest.lua:35-49`. Highlights:
+Runner UI is a popup at 85% × 80% of the screen. `multiple_testing = -1`
+uses all cores. 5-second time limit. Output comparison is `squish`
+(whitespace-insensitive). `view_output_diff = true` opens a diff on mismatch.
 
-- **C++**: `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o $(FNOEXT) $(FNAME)`. `-DLOCAL` is the conventional guard for local-only debug code.
-- **C**: `gcc -O2 -std=gnu17 -Wall -Wextra -o $(FNOEXT) $(FNAME) -lm`.
-- **Java**: `javac`, then `java $(FNOEXT)`.
-- **Python**: compile step is a no-op (`true`), run is `python3 $(FNAME)`.
-- **Rust**: `rustc -O` then `./$(FNOEXT)`.
+### Competitive Companion setup
 
-### Runner UI
-
-Popup interface (`competitest.lua:25-33`), 85% × 80% of the screen. `multiple_testing = -1` uses all cores. 5 s time limit. Output comparison is `squish` (whitespace-insensitive). `view_output_diff = true` opens a diff on mismatch.
-
-### Competitive Companion
-
-1. Install the [Competitive Companion](https://github.com/jmerle/competitive-companion) browser extension.
-2. In the extension's options, set the custom port to **27121**.
+1. Install [Competitive Companion](https://github.com/jmerle/competitive-companion).
+2. In its options, set the custom port to **27121**.
 3. Open Neovim, run `<leader>tp` (or `<leader>tr` / `<leader>tc`).
-4. Click the Competitive Companion icon on the problem page. The file + test cases land in `~/cp/...` and the buffer opens.
+4. Click the Competitive Companion icon on the problem page. The file +
+   tests land in `~/cp/...` and the buffer opens.
 
 ## Custom runner (`lua/cp/runner.lua`)
 
-Minimal alternative when you just want to hit "run" with a single input file. No test-case scaffolding.
+Single-input-file workflow. No test scaffolding, no popup UI — just compile
+and run with stdout in a real tmux pane (or a `:terminal` split if you're
+not in tmux).
 
 ### Behavior
 
-- `M.compile()` (`<leader>rc`): writes the buffer, runs the compile command in a floating toggleterm.
-- `M.run()` (`<leader>rr`): writes, compiles, runs. If `input.txt` / `in.txt` / `stdin.txt` exists in the buffer's directory, it's piped on stdin. Python has no compile step and is invoked directly.
+- `M.run()` (`<leader>rr`): writes the buffer, compiles, runs. If
+  `input.txt` / `in.txt` / `stdin.txt` exists in the buffer's directory,
+  it's piped on stdin. Python skips compile.
+- `M.compile()` (`<leader>rc`): writes + compiles only.
 - `M.edit_input()` (`<leader>ri`): opens `input.txt` next to the source.
 - `M.edit_output()` (`<leader>ro`): opens `expected_output.txt`.
-- `M.diff_output()` (`<leader>rd`): compiles, runs with `input.txt` on stdin, and diffs stdout against `expected_output.txt` via `diff -u`.
+- `M.diff_output()` (`<leader>rd`): compiles, runs with `input.txt` on
+  stdin, diffs stdout against `expected_output.txt` via `diff -u`.
+
+### tmux integration
+
+Inside tmux (`$TMUX` set), the runner shells out to:
+
+```
+tmux split-window -h -l 45% '<cmd>; ec=$?; printf "[exit %s] press any key…" "$ec"; read -n1 -r'
+```
+
+You get a real tmux pane: resize with `<prefix> M-h/l`, scroll/copy via
+tmux copy-mode, and Alacritty's OSC52 forwards the system clipboard out.
+Outside tmux it falls back to `:botright 15split | terminal`.
 
 ### Language detection
 
-`LANG` table at `lua/cp/runner.lua:18-51`:
+| Extension           | Compile                                                                 | Run             |
+|---------------------|-------------------------------------------------------------------------|------------------|
+| `.c`                | `gcc -O2 -std=gnu17 -Wall -Wextra -o <stem> <name> -lm`                 | `./<stem>`       |
+| `.cpp/.cc/.cxx`     | `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o <stem> <name>` | `./<stem>` |
+| `.java`             | `javac <name>`                                                          | `java <stem>`    |
+| `.py`               | (none)                                                                  | `python3 <path>` |
 
-| Extension           | Compile                                                                 | Run                       |
-|---------------------|-------------------------------------------------------------------------|----------------------------|
-| `.c`                | `gcc -O2 -std=gnu17 -Wall -Wextra -o <stem> <name> -lm`                 | `./<stem>`                 |
-| `.cpp/.cc/.cxx`     | `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o <stem> <name>` | `./<stem>`          |
-| `.java`             | `javac <name>`                                                          | `java <stem>`              |
-| `.py`               | (none)                                                                  | `python3 <path>`           |
+### When to use which
 
-### Why both?
-
-competitest covers the "graded" workflow: multiple named test cases, parallel runs, pass/fail UI, Competitive Companion. The custom runner is for the "while I'm debugging" loop — faster to invoke, prints live to a terminal, easy to pair with `dbg(...)` output from the C++ template.
+- **competitest** for graded test cases, contest receive, parallel runs,
+  diffs against many expected outputs.
+- **Custom runner** for the inner debug loop while you're iterating —
+  faster to invoke, output stays in a tmux pane you can scroll, pairs with
+  the `dbg(...)` macro from the C++ template.

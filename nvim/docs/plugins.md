@@ -1,68 +1,70 @@
 # Plugins
 
-One section per file under `lua/plugins/`. Plugin manager is [lazy.nvim](https://github.com/folke/lazy.nvim), bootstrapped from `lua/config/lazy.lua`.
+This config is **LazyVim base + extras + a few user plugin files**. Most
+plugins (telescope, snacks, neo-tree, treesitter, lualine, bufferline,
+which-key, gitsigns, conform, mason, lspconfig, cmp, etc.) come from
+LazyVim itself. This page only documents what's added or layered on top.
 
-## `colorscheme.lua`
+## LazyVim extras (auto-applied via `lazyvim.json`)
 
-- **folke/tokyonight.nvim** — sets the `tokyonight-night` colorscheme at startup.
+| Extra | What it adds |
+|-------|--------------|
+| `lazyvim.plugins.extras.dap.core` | nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, mason-nvim-dap. |
+| `lazyvim.plugins.extras.editor.neo-tree` | File explorer (`<leader>e`). |
+| `lazyvim.plugins.extras.lang.clangd` | clangd LSP via mason; `codelldb` DAP adapter; `clang-format` formatter. |
+| `lazyvim.plugins.extras.lang.java` | jdtls + nvim-jdtls; `java-debug-adapter`, `java-test`, `google-java-format`. |
+| `lazyvim.plugins.extras.lang.python` | pyright + ruff LSPs; `debugpy` DAP; `black` formatter; venv-selector. |
 
-## `ui.lua`
+To add another language: append the extra path (e.g.
+`lazyvim.plugins.extras.lang.rust`) to the `"extras"` array in
+`lazyvim.json`, then `:Lazy sync` (or just restart nvim).
 
-- **nvim-tree/nvim-web-devicons**, **MunifTanjim/nui.nvim**, **nvim-lua/plenary.nvim** — shared deps loaded lazily.
-- **nvim-lualine/lualine.nvim** — statusline with `globalstatus`, tokyonight theme, branch/diff/diagnostics + attached LSP client names on the right (`ui.lua:22-28`).
-- **akinsho/bufferline.nvim** — tabline with LSP diagnostics and a neo-tree offset (`ui.lua:51-54`).
-- **nvim-neo-tree/neo-tree.nvim** — file explorer. `<leader>e` toggles, `<leader>E` reveals. Dotfiles and gitignored files visible by default (`ui.lua:67-71`).
-- **folke/which-key.nvim** — `modern` preset, declares group labels for `<leader>b/c/d/f/g/l/r/s/t` (`ui.lua:84-94`).
-- **nvimdev/dashboard-nvim** — `hyper` theme, shortcuts for new file, find file, recent, new CP (pre-sets cpp filetype), Lazy, quit.
-- **rcarriga/nvim-notify** — overrides `vim.notify`; compact, fade-in, bottom-up.
+## User plugin files (`lua/plugins/`)
 
-## `editor.lua`
+### `competitest.lua`
 
-- **nvim-treesitter/nvim-treesitter** (pinned to `master`) — parsers for C/C++/Java/Python/Lua/Vim + common formats. Highlight + indent + incremental selection + textobjects. The `master` branch pin is load-bearing; see [`troubleshooting.md`](troubleshooting.md#nvim-treesitter-configs-not-found).
-- **nvim-telescope/telescope.nvim** — fuzzy finder with fzf-native and ui-select extensions. All `<leader>f*` bindings route through here.
-- **lewis6991/gitsigns.nvim** — gutter signs + per-buffer git keymaps (`<leader>g*`, `]h` / `[h`).
-- **kdheepak/lazygit.nvim** — `<leader>gg`.
-- **windwp/nvim-autopairs** — `check_ts = true` so pairs respect treesitter context.
-- **numToStr/Comment.nvim** — `gcc` / `gc{motion}` / visual `gc`.
-- **lukas-reineke/indent-blankline.nvim** (`ibl`) — indent guides, scope off, excluded in UI filetypes.
-- **kylechui/nvim-surround** — `ys` / `ds` / `cs`.
-- **RRethy/vim-illuminate** — highlights references under the cursor. Providers restricted to `lsp` + `regex` (treesitter provider is buggy, see troubleshooting).
-- **folke/todo-comments.nvim** — highlights TODO/FIXME/NOTE; `<leader>ft` opens them via telescope.
-- **folke/trouble.nvim** — `<leader>x*` panels for diagnostics / symbols / quickfix.
+[xeluxee/competitest.nvim](https://github.com/xeluxee/competitest.nvim) — CP
+test-case manager. Receives problems from the
+[Competitive Companion](https://github.com/jmerle/competitive-companion)
+browser extension on port `27121`. Runs all test cases in parallel,
+compares outputs (whitespace-insensitive), shows diffs on mismatch. Tied
+into the templates under `~/.config/nvim/templates/` and the C++ shim
+under `~/.config/nvim/include/`. See
+[`competitive-programming.md`](competitive-programming.md).
 
-## `lsp.lua`
+### `cpp.lua`
 
-See [`lsp.md`](lsp.md) for the full story. High-level:
+C/C++ tooling: pins Mason tools (`clangd`, `clang-format`, `codelldb`),
+sets a CP-friendly `clang-format` style (LLVM base, 4-space indent,
+`ColumnLimit: 0`, short ifs/loops on one line, `SortIncludes: false`),
+and adds `<leader>rD` keymap to compile with `-O0 -g3` and launch
+`codelldb`, auto-piping `input.txt` / `in.txt` / `stdin.txt` on stdin.
+See [`cpp.md`](cpp.md) for the full C/C++ workflow.
 
-- **mason-org/mason.nvim** — installer.
-- **mason-org/mason-lspconfig.nvim** — ensures `clangd lua_ls jdtls pyright bashls` are installed.
-- **WhoIsSethDaniel/mason-tool-installer.nvim** — ensures `clang-format stylua google-java-format codelldb java-debug-adapter java-test` are installed.
-- **neovim/nvim-lspconfig** — provides the server definitions (`lsp/<name>.lua`) that `vim.lsp.enable()` picks up. We override via `vim.lsp.config()` for clangd and lua_ls; `jdtls` is owned by `ftplugin/java.lua` and deliberately excluded from `vim.lsp.enable`.
-- **stevearc/conform.nvim** — format-on-save; `:FormatDisable` / `:FormatEnable` to toggle.
+### Theme/UI tweaks
 
-## `completion.lua`
+- `all-themes.lua` — installs an extended set of colorschemes for
+  picking via `<leader>uC`.
+- `omarchy-theme-hotreload.lua` — listens on the `LazyReload` user
+  event, re-resolves the colorscheme from LazyVim's merged opts, and
+  re-applies it plus `after/plugin/transparency.lua`. This is what lets
+  Omarchy's external theme rewrites propagate without restarting nvim.
+- `disable-news-alert.lua` — suppresses LazyVim's "news" notification.
+- `snacks-animated-scrolling-off.lua` — disables snacks' smooth-scroll
+  animation.
 
-- **hrsh7th/nvim-cmp** with `cmp-nvim-lsp`, `cmp-buffer`, `cmp-path`, `cmp-cmdline` sources.
-- **L3MON4D3/LuaSnip** + **rafamadriz/friendly-snippets** — snippet engine + preloaded snippet library.
-- **onsails/lspkind.nvim** — completion item icons.
-- Tab / S-Tab navigates; cmp integrates with nvim-autopairs so `(` auto-inserts the right brace.
+## Custom Lua module (`lua/cp/`)
 
-## `dap.lua`
+### `runner.lua`
 
-See [`debugging.md`](debugging.md). Loads **nvim-dap**, **nvim-dap-ui**, **nvim-dap-virtual-text**, **mason-nvim-dap**. Wires `codelldb` for C/C++ using `$MASON/packages/codelldb/extension/adapter/codelldb`.
+Tmux-aware compile-and-run helper for C / C++ / Java / Python. No plugin
+dependency — uses `vim.fn.system` to invoke `tmux split-window` when
+inside tmux, or `:terminal` otherwise. Keymaps are mounted in
+`lua/config/keymaps.lua`. See [`competitive-programming.md`](competitive-programming.md#custom-runner-luacprunnerlua).
 
-## `terminal.lua`
+## ftplugin overrides (`ftplugin/`)
 
-- **akinsho/toggleterm.nvim** — `<C-\>` toggles a terminal. Float/horizontal/vertical variants are available. The custom CP runner in `lua/cp/runner.lua` opens a floating toggleterm for compile/run results.
-
-## `compile-run.lua`
-
-Thin spec file that only contributes `<leader>r*` keymaps pointing into the custom module `lua/cp/runner.lua`. Runner itself does not depend on any plugin — if toggleterm is unavailable it falls back to `:botright split | terminal`.
-
-## `competitest.lua`
-
-See [`competitive-programming.md`](competitive-programming.md). Loads **xeluxee/competitest.nvim**. Configures compile/run commands per language, testcase file layout, received-problem paths, and Competitive Companion on port 27121.
-
-## `jdtls.lua`
-
-One-liner that declares **mfussenegger/nvim-jdtls** with `ft = "java"`. The actual startup happens in `ftplugin/java.lua` on the first Java buffer.
+- `c.lua`, `cpp.lua`, `python.lua` — 4-space indent, `expandtab`, C/C++
+  use `// %s` for `commentstring`.
+- LazyVim's `lang.java` extra owns Java's per-buffer setup; we don't
+  ship `ftplugin/java.lua`.
