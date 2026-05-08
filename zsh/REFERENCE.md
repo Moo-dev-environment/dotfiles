@@ -24,28 +24,20 @@ configured in this zsh setup.
 
 ```
 zsh/
-  REFERENCE.md            # This file
-  conf.d/
-    01-environment.zsh    # OS detection, locale, EDITOR, XDG dirs, PAGER, PATH
-    02-options.zsh        # setopt calls, history config, WORDCHARS
-    03-completion.zsh     # fpath, compinit (cached 24h), zstyle rules
-    04-keybindings.zsh    # bindkey mappings (emacs mode)
-    05-fzf.zsh            # FZF config, backends, previews, shell integration
-    06-plugins.zsh        # Autosuggestions, syntax-highlighting, history-search
-    07-prompt.zsh         # Starship init with vcs_info fallback
-    08-aliases.zsh        # All aliases (navigation, git, docker, tools, etc.)
-    09-functions.zsh      # Shell functions (fzf helpers, git helpers, tmux, etc.)
-    10-tools.zsh          # eval-based hooks: zoxide, direnv, mise, thefuck, atuin
+  .zshrc        # Single-file config (env, options, completion, keybinds,
+                #   fzf, plugins, prompt, aliases, functions, tool hooks)
+  .zprofile     # Login-shell hook (currently empty; reserved)
+  README.md     # Install, ordering invariants, design notes
+  REFERENCE.md  # This file — full cheatsheet
 ```
 
-To add new config, create a `.zsh` file in `conf.d/` with the appropriate numeric
-prefix — files are sourced in glob order.
+See **[README.md](README.md)** for the load order, ordering invariants,
+and rationale behind non-obvious choices (FZF bind quoting,
+fzf-completion + `**` trigger, macOS path canonicalization, etc.).
 
 ---
 
 ## Shell Options
-
-Configured in `conf.d/02-options.zsh`.
 
 ### Directory Navigation
 
@@ -125,7 +117,7 @@ separators, `=` in env-var assignments, and `:` in URLs.
 
 ## Key Bindings
 
-Configured in `conf.d/04-keybindings.zsh`. Uses **emacs mode** (`bindkey -e`).
+Uses **emacs mode** (`bindkey -e`).
 
 ### Line Editing
 
@@ -186,7 +178,7 @@ Configured in `conf.d/04-keybindings.zsh`. Uses **emacs mode** (`bindkey -e`).
 
 ## Aliases
 
-Configured in `conf.d/08-aliases.zsh`. Bypass any alias with a leading backslash:
+Bypass any alias with a leading backslash:
 `\ls`, `\rm`, `\cat`.
 
 ### Navigation
@@ -393,7 +385,6 @@ any archive format.
 
 ## Functions
 
-Configured in `conf.d/09-functions.zsh`.
 
 ### File & Directory
 
@@ -488,7 +479,7 @@ Configured in `conf.d/09-functions.zsh`.
 
 ## Plugins
 
-Configured in `conf.d/06-plugins.zsh`. No plugin manager — sourced directly
+No plugin manager — sourced directly
 from system paths (Homebrew, Arch, Debian/Ubuntu).
 
 **Source order is mandatory:**
@@ -539,7 +530,7 @@ when a tool isn't installed.
 
 ## FZF Shortcuts
 
-Configured in `conf.d/05-fzf.zsh`. Backend: `fd` (falls back to `find`).
+Backend: `fd` (falls back to `find`).
 
 | Shortcut  | What it does                    | Preview window                    |
 |-----------|---------------------------------|-----------------------------------|
@@ -564,7 +555,7 @@ Color theme: **Tokyo Night** (consistent with bat, delta, starship, terminal).
 
 ## Tool Integrations
 
-Configured in `conf.d/10-tools.zsh`. These use `eval` hooks and are placed last
+These use `eval` hooks and are placed last in `.zshrc`
 so they can override builtins after all other config is loaded.
 
 | Tool      | Behaviour                                                                     |
@@ -629,7 +620,7 @@ replacement isn't installed. Core operations always work.
 | `zsh-defer`               | Shell startup is already fast. No performance problem to solve.             |
 | `fast-syntax-highlighting`| Marginal speed difference vs zsh-syntax-highlighting at this config size.  |
 | `zsh-vi-mode`             | Would change the emacs-mode workflow. Major habit change, not an improvement. |
-| Modular XDG `ZDOTDIR`     | Would require a `.zshenv` + changing how zsh finds its config. More complexity than the `conf.d` approach. |
+| Modular XDG `ZDOTDIR`     | Would require a `.zshenv` + changing how zsh finds its config. More complexity than a single `.zshrc`. |
 | `inc_append_history`      | `share_history` already writes entries incrementally. Enabling both causes confusing ordering and apparent duplicates across concurrent shells. |
 | `url-quote-magic`         | Binding it to `self-insert` causes typing lag in modern terminals. `bracketed-paste-magic` alone handles safe pasting. |
 
