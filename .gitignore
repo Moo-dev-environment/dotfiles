@@ -1,4 +1,13 @@
 .DS_Store
+
+# Backup files — written by bootstrap.sh (*.backup-<UTC ts>) and by
+# audit/refactor tooling (*.bak.<unix-ts>).
 *.backup-*
+*.bak.*
+
+# Optional machine-local override files (imported by their tools when present)
 ghostty/config.local
-alacritty/local.toml
+alacritty/config.local.toml
+
+# tmux — TPM-managed plugin checkouts
+tmux/plugins/

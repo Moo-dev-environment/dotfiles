@@ -1,171 +1,215 @@
-# tmux
+# tmux — Quick Reference
 
-Terminal multiplexer. Config at `~/.config/tmux/tmux.conf`. Plugins managed by TPM under `~/.config/tmux/plugins/`.
+Concise binding cheatsheet. For walkthrough-style explanations of *why* and *when* to use each, see [`../TMUX-GUIDE.md`](../TMUX-GUIDE.md).
 
+- **Config:** `~/.config/tmux/tmux.conf` (symlink → `dotfiles/tmux/tmux.conf`)
 - **Prefix:** `Ctrl+Space`
-- **Theme:** Tokyo Night (inline — no external theme plugin)
-- **Bootstrap:** TPM auto-clones itself on first start. Press `prefix + I` after launch to install plugins.
+- **Theme:** Tokyo Night Storm (inline)
+- **Bootstrap:** TPM auto-clones on first start. Then: `prefix + I` to install plugins.
 
-## Cheat sheet
+---
 
-### Core
+## Core
 
 | Keys             | Action |
 |------------------|--------|
-| `prefix + ,`     | Reload config |
-| `prefix + c`     | New window (inherits CWD) |
-| `prefix + C`     | New session (inherits CWD) |
-| `prefix + r`     | Rename window (prefilled) |
-| `prefix + S`     | Rename session (prefilled) |
-| `prefix + s`     | Session tree with preview |
-| `prefix + O`     | sessionx — fzf session picker |
-| `prefix + x`     | Kill pane (confirm) |
+| `prefix + ,`     | Reload config (live) |
+| `prefix + ?`     | List every active binding |
+| `prefix + d`     | Detach |
+| `prefix + e`     | Respawn pane (after `remain-on-exit failed` kept it open) |
+| `prefix + t`     | Show fullscreen clock |
+
+## Sessions
+
+| Keys             | Action |
+|------------------|--------|
+| `prefix + s`     | Built-in session/window tree picker |
+| `prefix + O`     | sessionx — fzf session picker with previews |
+| `prefix + N`     | New session (prompts for name, inherits cwd) |
+| `prefix + S`     | Rename current session (prefilled) |
 | `prefix + X`     | Kill current session (confirm) |
-| `prefix + e`     | Respawn pane after command exited |
+| `Alt+Up` / `Alt+Down` | Previous / next session (no prefix) |
 
-### Splits
+## Windows
 
 | Keys             | Action |
 |------------------|--------|
-| `prefix + \|`    | Vertical split (CWD preserved) |
-| `prefix + \\`    | Alias for `\|` (no shift needed) |
+| `prefix + c`     | New window (inherits cwd, auto-named) |
+| `prefix + C`     | New window (prompts for name) |
+| `prefix + r`     | Rename current window (prefilled) |
+| `prefix + Tab`   | Last window *(extrakto plugin overrides — see Conflicts)* |
+| `prefix + n` / `prefix + p` | Next / prev window (repeatable) |
+| `Alt+1`…`Alt+9`  | Jump directly to window 1–9 (no prefix) |
+| `prefix + b`     | Break pane out into its own window |
+| `prefix + B`     | Pull a pane from another window into this one |
+
+## Splits
+
+| Keys             | Action |
+|------------------|--------|
+| `prefix + \|`    | Vertical split (cwd preserved) |
+| `prefix + \\`    | Same — alias (no Shift needed) |
 | `prefix + -`     | Horizontal split |
-| `prefix + z`     | Zoom / unzoom current pane (tmux default) |
-| `prefix + b`     | Break pane into its own window |
-| `prefix + B`     | Join pane from another window |
 
-### Navigation
-
-| Keys                 | Action |
-|----------------------|--------|
-| `Ctrl+h/j/k/l`       | Move between panes (seamless with Neovim via vim-tmux-navigator) |
-| `prefix + ;`         | Last pane |
-| `prefix + Tab`       | Last window |
-| `Alt+1..9`           | Jump directly to window N |
-| `prefix + n` / `p`   | Next / prev window (repeatable) |
-| `Alt+Up` / `Alt+Down`| Previous / next session |
-| `prefix + H/J/K/L`   | Resize pane (repeatable) |
-| `prefix + <` / `>`   | Swap pane up / down |
-
-### Copy mode (vi)
-
-| Keys                 | Action |
-|----------------------|--------|
-| `prefix + v` or `[`  | Enter copy mode |
-| `v`                  | Begin selection |
-| `Ctrl+v`             | Toggle rectangle / block selection |
-| `y` or `Enter`       | Yank to clipboard, exit |
-| `Ctrl+u` / `Ctrl+d`  | Half-page up / down |
-| `g` / `G`            | Top / bottom of scrollback |
-| `/` / `?`            | Incremental search down / up |
-| `o` (tmux-open)      | Open highlighted URL or path |
-
-### Extras
+## Pane navigation & motion
 
 | Keys             | Action |
 |------------------|--------|
-| `prefix + g`     | Popup scratch session (attaches to persistent `scratch`) |
-| `prefix + u`     | fzf-url — pick a URL from visible text and open it |
-| `prefix + space` | tmux-thumbs — hint-mode copy of any path / hash / URL |
-| `prefix + Shift+space` | tmux-thumbs — copy **and** open the match |
-| `prefix + Tab`   | extrakto — fzf over visible pane text (⚠ overrides default last-window; swap keys if unwanted) |
-| `prefix + P`     | Toggle synchronize-panes (broadcast input) |
-| `prefix + *`     | Toggle pipe-pane logging to `~/tmux-<window>.log` |
+| `Ctrl+h/j/k/l`   | Move between panes — seamless with Neovim splits (vim-tmux-navigator, no prefix) |
+| `prefix + ;`     | Last-active pane |
+| `prefix + H/J/K/L` | Resize border (5 cells, repeatable) |
+| `prefix + <` / `>` | Swap pane and follow it |
+| `prefix + z`     | Toggle zoom (fill window) — default |
+| `prefix + q`     | Show pane numbers; press digit to jump — default |
+| `prefix + Space` | Cycle layouts *(thumbs plugin overrides — see Conflicts)* |
+
+## Pane actions
+
+| Keys             | Action |
+|------------------|--------|
+| `prefix + x`     | Kill pane (no confirm) |
+| `prefix + Ctrl+l`| Send `Ctrl+L` and clear scrollback |
+| `prefix + m` / `M` | Mark / unmark pane (referenced as `~` by join-pane / swap-pane) |
+| `prefix + P`     | Toggle synchronize-panes (broadcast input; status shows purple SYNC) |
+| `prefix + *`     | Toggle pipe-pane logging to `~/.local/state/tmux/<session>-<window>-<pane>.log` |
+| `prefix + g`     | Popup scratch shell (80%×80%, persistent `scratch` session, current cwd) |
+
+## Copy mode (vi)
+
+Enter with `prefix + v` (or `prefix + [`). Status shows yellow `COPY`.
+
+| Keys             | Action |
+|------------------|--------|
+| `h j k l`        | Char motions |
+| `w` / `b`        | Word forward / back |
+| `0` / `$`        | Line start / end |
+| `Ctrl+u` / `Ctrl+d` | Half-page up / down |
+| `g` / `G`        | Top / bottom of scrollback |
+| `/` / `?`        | Incremental search down / up |
+| `n` / `N`        | Next / previous match |
+| `v`              | Begin selection |
+| `Ctrl+v`         | Toggle rectangle / block selection |
+| `y` or `Enter`   | Yank to system clipboard, exit |
+| `o`              | tmux-open: open URL/path under cursor |
+| Mouse drag       | Select; auto-yank on release |
+
+## Plugin extras
+
+| Keys             | Action |
+|------------------|--------|
+| `prefix + u`     | tmux-fzf-url — fuzzy-pick a URL from visible text |
+| `prefix + Space` | tmux-thumbs — vimium-style hint copy |
+| `prefix + Shift+Space` | tmux-thumbs — copy and open |
+| `prefix + Tab`   | extrakto — fzf over visible pane text |
 | `prefix + Ctrl+s`| tmux-resurrect save |
 | `prefix + Ctrl+r`| tmux-resurrect restore |
 
-> **Key conflict note:** `prefix + Tab` is bound to both `last-window` and extrakto in this config. The extrakto plugin binding loads last, so it wins. If you want `last-window` back, set `@extrakto_key` to something else (e.g. `e`) in `tmux.conf`.
+## Plugin management
 
-## Structure
+| Keys             | Action |
+|------------------|--------|
+| `prefix + I`     | Install plugins from `tmux.conf` |
+| `prefix + U`     | Update installed plugins |
+| `prefix + Alt+u` | Uninstall plugins removed from `tmux.conf` |
 
-```
-~/.config/tmux/
-├── tmux.conf            main config (heavily commented)
-├── plugins/             TPM-managed; auto-populated
-│   ├── tpm/
-│   ├── tmux-resurrect/
-│   ├── tmux-continuum/
-│   └── ... (the rest listed below)
-└── docs/
-    └── README.md        this file
-```
+---
+
+## Known binding conflicts
+
+These are **intentional** — plugin bindings load after the main config and override these defaults. If you want the original default back, override the plugin's option to a different key (in `tmux.conf`).
+
+| Default key   | Default action     | Currently bound to | Restore default by |
+|---------------|--------------------|--------------------|--------------------|
+| `prefix + Tab` | `last-window`      | extrakto           | `set -g @extrakto_key 'e'` (or any free key) |
+| `prefix + Space` | `next-layout`    | tmux-thumbs        | `set -g @thumbs-key '<other>'`                |
+| `prefix + Ctrl+l` | `send-keys C-l` (after vim-tmux-navigator) | `send-keys C-l \; clear-history` | (already disabled via `@vim_navigator_prefix_mapping_clear_screen ''`) |
+
+---
 
 ## Plugins
 
-Declared in order under the "PLUGINS" section of `tmux.conf`:
+Declared in order under the **PLUGINS** section of `tmux.conf`:
 
-| Plugin                        | Purpose |
-|-------------------------------|---------|
-| `tmux-plugins/tpm`            | Plugin manager itself (must be first). |
-| `tmux-plugins/tmux-resurrect` | Save / restore sessions (`prefix+Ctrl+s` / `prefix+Ctrl+r`). Pane contents preserved. For Neovim restoration, `@resurrect-strategy-nvim = session` requires a Neovim session plugin (persistence.nvim or auto-session) to produce a session file on exit. |
-| `tmux-plugins/tmux-continuum` | Auto-saves every 15 min, auto-restores on tmux start. |
-| `tmux-plugins/tmux-yank`      | OSC-52 + pbcopy / xclip / xsel auto-detection. |
-| `christoomey/vim-tmux-navigator` | Seamless `Ctrl+h/j/k/l` between tmux panes and Neovim splits. Requires the matching Neovim plugin. |
-| `omerxx/tmux-sessionx`        | fzf session picker with previews (`prefix+O`). |
-| `tmux-plugins/tmux-open`      | In copy mode, `o` opens the highlighted path/URL. |
-| `wfxr/tmux-fzf-url`           | `prefix+u` fuzzy-picks any visible URL and opens it. |
-| `fcsonline/tmux-thumbs`       | vimium-style hint jumps to copy / open paths, hashes, URLs, IPs. |
-| `laktak/extrakto`             | fzf over all visible pane text; yanks or inserts selection at prompt. |
+| Plugin                          | Purpose |
+|---------------------------------|---------|
+| `tmux-plugins/tpm`              | Plugin manager itself (must be first). |
+| `tmux-plugins/tmux-resurrect`   | Save/restore sessions and pane contents. Neovim session restore via `@resurrect-strategy-nvim` requires a Neovim session plugin to write the session file on exit. |
+| `tmux-plugins/tmux-continuum`   | Auto-saves every 15 min, auto-restores on tmux server start. |
+| `tmux-plugins/tmux-yank`        | OSC-52 + pbcopy / xclip / xsel auto-detection. |
+| `christoomey/vim-tmux-navigator`| Seamless `Ctrl+h/j/k/l` between tmux panes and Neovim splits. Requires the matching Neovim plugin. |
+| `omerxx/tmux-sessionx`          | fzf session picker with previews (`prefix + O`). |
+| `tmux-plugins/tmux-open`        | In copy mode, `o` opens the highlighted path/URL. |
+| `wfxr/tmux-fzf-url`             | `prefix + u` fuzzy-picks any visible URL. |
+| `fcsonline/tmux-thumbs`         | Vimium-style hint jumps to copy/open paths, hashes, URLs, IPs. |
+| `laktak/extrakto`               | fzf over all visible pane text; yank or insert at prompt. |
 
-### Plugin management
+---
 
-```
-prefix + I    install new plugins listed in the config
-prefix + U    update installed plugins
-prefix + Alt+u  uninstall plugins that are no longer in the config
-```
+## Terminal capabilities (the why)
 
-## Terminal capabilities
+| Setting | Effect |
+|---------|--------|
+| `default-terminal "tmux-256color"` | 256-color support inside tmux. |
+| `terminal-features ",*:RGB"` | 24-bit color (3.2+ preferred form). |
+| `terminal-features ",*:usstyle"` | Curly / dotted / dashed underlines (LSP diagnostics in Neovim). |
+| `allow-passthrough on` | Inline image protocols (kitty/Ghostty); active pane only — `all` would be too permissive over SSH. |
+| `set-clipboard on` | OSC-52 clipboard passthrough. |
+| `focus-events on` | Forwards focus changes to inner programs (Neovim autoread, dim-on-blur). |
+| `escape-time 10` | Snappy mode-switching in Neovim (default 500 ms is sluggish). |
+| `repeat-time 600` | Window for `-r` repeat bindings (resize, swap, next-window). |
+| `history-limit 50000` | Lines of scrollback per pane. |
+| `window-size largest` | Resize each window to its largest connected client. |
+| `detach-on-destroy off` | Killing the current session switches to next, doesn't drop you out of tmux. |
+| `set -g remain-on-exit failed` | Crashed panes stay open with output visible; `prefix + e` to respawn. |
 
-- `default-terminal "tmux-256color"` — advertises 256-color support to programs inside tmux.
-- `terminal-features ",*:RGB"` — 24-bit color (3.2+ preferred form vs. the older `terminal-overrides` RGB hack).
-- `terminal-features ",*:usstyle"` + explicit `Smulx` / `Setulc` overrides — undercurl and colored underlines (Neovim LSP diagnostics render correctly).
-- `allow-passthrough on` — OSC passthrough for inline images (kitty/iTerm2 image protocol, Ghostty). Set to `on` (active pane) rather than `all` to reduce SSH attack surface.
-- `set-clipboard on` — OSC 52 clipboard passthrough.
-- `focus-events on` — forwards focus changes so Neovim autoread + dim-on-blur work.
+---
 
 ## Status bar
 
-Tokyo Night palette, top-positioned, refreshed every 1 s.
+Tokyo Night palette, top-positioned, `status-interval 60` (no widgets that need refreshing).
 
-- **Left:** session name on blue.
-- **Window list:** dimmed for inactive, blue accent for active, yellow highlight for activity, red for bell.
-- **Right:** `PREFIX / COPY / ZOOM / SYNC` state indicators, then `%H:%M`.
-- **Pane borders:** dim line for inactive, blue for active; border title shows `#P #{pane_current_command}` so you always know what's running where.
+- **Left:** `#S` — current session name on blue.
+- **Window list:** dimmed for inactive, blue accent + bold for active, yellow underline for activity, red bold for bell.
+- **Right:** state badges only — `PREFIX` / `COPY` / `ZOOM` / `SYNC`. Empty otherwise (no clock).
+- **Pane borders:** dim line for inactive, blue for active. Border title shows `#P #{pane_current_command}`.
+
+---
 
 ## Sessions across restarts
 
-tmux-resurrect + tmux-continuum together mean:
+resurrect + continuum:
 
-1. Every 15 minutes, current sessions (including pane contents) are snapshotted to `~/.local/share/tmux/resurrect/`.
-2. On next tmux start, the latest snapshot is restored automatically.
-3. Manual save / restore via `prefix+Ctrl+s` / `prefix+Ctrl+r`.
+1. Every 15 min, sessions (incl. pane contents) snapshot to `~/.local/share/tmux/resurrect/`.
+2. Next tmux server start auto-restores from the latest snapshot.
+3. Manual save / restore: `prefix + Ctrl+s` / `prefix + Ctrl+r`.
 
-What is *not* restored automatically:
+**Not** restored: live process state. resurrect re-runs the recorded command line; it doesn't preserve PIDs, file handles, or in-memory state. Programs in `@resurrect-processes` (`ssh nvim vim vi htop btop k9s less more man tail watch`) get respawned by command.
 
-- Running processes (resurrect writes metadata, not PIDs). Your editors / REPLs are relaunched from the command line recorded at snapshot time.
-- Shell history state in the pane (the pane's shell starts fresh).
+> **Privacy:** Pane-contents capture writes whatever scrolled by. Wipe `~/.local/share/tmux/resurrect/` if you ever pasted credentials.
+
+---
 
 ## Troubleshooting
 
-- **`prefix + I` does nothing / plugins not installing:** confirm TPM is cloned: `ls ~/.config/tmux/plugins/tpm`. The bootstrap line at the bottom of `tmux.conf` should clone it on first start; if not, clone manually:
+- **TPM didn't bootstrap.** `git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm`, then `prefix + ,` reload, `prefix + I` install.
+- **Colors washed out.** `tmux info | grep -i rgb` should print `RGB: (flag) true`. If not, the outer terminal isn't advertising 24-bit color.
+- **Clipboard broken on macOS old.** `brew install reattach-to-user-namespace` and uncomment the Darwin `if-shell` block at the bottom of `tmux.conf`.
+- **`Ctrl+Space` not reaching tmux.** Test outside tmux with `cat`. If nothing echoes, terminal swallows it — re-bind in the terminal or change tmux prefix to `C-a`.
+- **`prefix + u` does nothing.** Install `fzf`.
+- **`prefix + Tab` opens fzf instead of last-window.** That's extrakto. Set `@extrakto_key 'e'` to free Tab.
+- **thumbs first run is slow.** It compiles a Rust binary. `brew install tmux-thumbs` to skip the cargo build.
 
-  ```sh
-  git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
-  ```
+---
 
-- **Colors washed out in Neovim:** you're almost certainly missing the RGB terminal feature. Verify from inside tmux:
+## Layout
 
-  ```sh
-  tmux info | grep -i rgb
-  ```
-
-  Should show `RGB: (flag) true`.
-
-- **Clipboard not working under macOS:** modern Ghostty + tmux-yank works out of the box. Only if you hit issues on old macOS: `brew install reattach-to-user-namespace` and uncomment the `if-shell "uname | grep -q Darwin"` block near the end of `tmux.conf`.
-
-- **Ctrl+Space doesn't reach tmux:** some terminal emulators swallow it. Either change the prefix (top of `tmux.conf`) or bind Ghostty to pass it through — Ghostty 1.0+ does by default.
-
-- **tmux-thumbs first run is slow:** it compiles a Rust binary on first use. Install ahead of time with `brew install tmux-thumbs`, or wait out the one-time cargo build.
-
-- **extrakto stole my `prefix+Tab`:** change `@extrakto_key` in `tmux.conf` to a different key (the `last-window` binding is restored automatically once extrakto stops claiming Tab).
+```
+~/.config/tmux/                          (symlink → dotfiles/tmux/)
+├── tmux.conf                             main config — heavily commented
+├── TMUX-GUIDE.md                         long-form learning guide
+├── docs/
+│   └── README.md                         this file (quick reference)
+└── plugins/                              TPM-managed; auto-populated
+    ├── tpm/
+    └── ...
+```

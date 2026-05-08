@@ -1,0 +1,8 @@
+# Global clangd config — applied to all C/C++ files without a local compile_commands.json.
+# Adds the shim include dir so <bits/stdc++.h> resolves on Apple clang.
+CompileFlags:
+  Add:
+    - -I/Users/mo/.config/nvim/include
+    - -std=gnu++20
+    - -Wall
+    - -Wextra

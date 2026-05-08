@@ -1,0 +1,113 @@
+# Alacritty — cross-platform (macOS + Linux) config.
+#
+# Symlinked from ~/.config/alacritty/. Reload is automatic
+# (`live_config_reload = true`), so changes take effect on save.
+#
+# macOS-only options (`window.blur`, `window.option_as_alt`) are
+# silently ignored on Linux; Linux-only `decorations_theme_variant`
+# (Wayland) is silently ignored on macOS. One file, both platforms.
+
+[general]
+import = [
+  "~/.config/alacritty/themes/tokyonight_storm.toml",
+  # Uncomment + create for machine-local overrides (e.g. font size on a
+  # 4K display, or `decorations = "None"` on Hyprland):
+  # "~/.config/alacritty/config.local.toml",
+]
+live_config_reload = true
+
+# ─── window ───
+[window]
+opacity        = 0.96
+blur           = true            # macOS-only
+decorations    = "Full"          # macOS: "Full" / "Buttonless" / "Transparent" / "None".
+                                 # Linux: "Full" / "None". On Hyprland, override to "None" via config.local.toml.
+dynamic_title  = true
+option_as_alt  = "OnlyLeft"      # macOS-only; matches Ghostty's `macos-option-as-alt = left`.
+padding        = { x = 10, y = 8 }
+startup_mode   = "Windowed"
+title          = "Alacritty"
+dimensions     = { columns = 140, lines = 38 }
+
+# ─── scrollback ───
+[scrolling]
+history    = 50000
+multiplier = 3
+
+# ─── font ───
+[font]
+size                = 15.0
+builtin_box_drawing = true
+
+[font.normal]
+family = "CaskaydiaMono Nerd Font Mono"
+style  = "Regular"
+
+[font.bold]
+family = "CaskaydiaMono Nerd Font Mono"
+style  = "Bold"
+
+[font.italic]
+family = "CaskaydiaMono Nerd Font Mono"
+style  = "Italic"
+
+[font.bold_italic]
+family = "CaskaydiaMono Nerd Font Mono"
+style  = "Bold Italic"
+
+# Slight cell padding to match Ghostty's `adjust-cell-height = 5%`.
+[font.offset]
+x = 0
+y = 2
+
+# ─── cursor ───
+[cursor]
+unfocused_hollow = true
+thickness        = 0.15
+
+[cursor.style]
+shape    = "Block"
+blinking = "Off"
+
+# ─── selection ───
+[selection]
+save_to_clipboard     = true                              # Ghostty parity: copy-on-select=clipboard.
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+# ─── mouse ───
+[mouse]
+hide_when_typing = true
+
+# ─── bell (silent flash) ───
+[bell]
+animation = "EaseOutExpo"
+duration  = 0
+
+# ─── keyboard ───
+# Alacritty has solid defaults; this section just adds the bindings that
+# aren't built in. Splits/tabs are intentionally absent — use tmux.
+# `mods` accepts `Command`, `Control`, `Shift`, `Super`, `Option`/`Alt`.
+# On Linux, `Command` aliases `Super`, so cmd-style bindings work there too.
+[keyboard]
+bindings = [
+  # Font size — Cmd on macOS, Ctrl+Shift on Linux.
+  { key = "Equals", mods = "Command",       action = "IncreaseFontSize" },
+  { key = "Minus",  mods = "Command",       action = "DecreaseFontSize" },
+  { key = "Key0",   mods = "Command",       action = "ResetFontSize"    },
+  { key = "Equals", mods = "Control|Shift", action = "IncreaseFontSize" },
+  { key = "Minus",  mods = "Control|Shift", action = "DecreaseFontSize" },
+  { key = "Key0",   mods = "Control|Shift", action = "ResetFontSize"    },
+
+  # New window.
+  { key = "N", mods = "Command",       action = "CreateNewWindow" },
+  { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+
+  # Copy / paste — defaults already cover Ctrl+Shift+C/V on Linux.
+  { key = "C", mods = "Command", action = "Copy"  },
+  { key = "V", mods = "Command", action = "Paste" },
+
+  # Clear scrollback (similar to Ghostty's super+k). Pair with Ctrl-L /
+  # `clear` in your shell to wipe the visible region as well.
+  { key = "K", mods = "Command",       action = "ClearHistory" },
+  { key = "K", mods = "Control|Shift", action = "ClearHistory" },
+]
