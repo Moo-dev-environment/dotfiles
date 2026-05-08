@@ -87,11 +87,21 @@ link "~/.config/starship.toml" "$REPO/starship/starship.toml"
 # ── tmux ─────────────────────────────────────────────────────────────
 link "~/.config/tmux/tmux.conf" "$REPO/tmux/tmux.conf"
 
-# ── ghostty (per-OS overlay) ─────────────────────────────────────────
-link "~/.config/ghostty/config" "$REPO/ghostty/config.${OS}"
+# ── neovim (whole directory) ─────────────────────────────────────────
+link "~/.config/nvim" "$REPO/nvim"
 
-# ── alacritty (per-OS overlay) ───────────────────────────────────────
-link "~/.config/alacritty/alacritty.toml" "$REPO/alacritty/${OS}.toml"
+# ── ghostty (single config; per-OS overlays were dropped in favor of
+#    inline `?config.local` for machine-local overrides) ──────────────
+link "~/.config/ghostty/config" "$REPO/ghostty/config"
+
+# ── alacritty (whole directory — alacritty.toml + themes/) ───────────
+link "~/.config/alacritty" "$REPO/alacritty"
+
+# ── bat ──────────────────────────────────────────────────────────────
+link "~/.config/bat/config" "$REPO/bat/config"
+
+# ── clangd ───────────────────────────────────────────────────────────
+link "~/.config/clangd/config.yaml" "$REPO/clangd/config.yaml"
 
 # ── login shell ──────────────────────────────────────────────────────
 echo

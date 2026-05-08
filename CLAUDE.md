@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Personal macOS-first dotfiles (with secondary Arch/Omarchy support) for **zsh, Neovim, tmux, Ghostty, Starship, git, bat**. There is no install script — files are **symlinked into `$HOME` / `$XDG_CONFIG_HOME`**, so editing a file in this repo edits the live config.
+Personal macOS-first dotfiles (with secondary Arch/Omarchy support) for **zsh, Neovim, tmux, Ghostty, Alacritty, Starship, git, bat, clangd**. Files are **symlinked into `$HOME` / `$XDG_CONFIG_HOME`** by `bootstrap.sh` (idempotent — already-correct symlinks are left alone, real files are backed up to `*.backup-<UTC ts>`). After bootstrap, editing a file in this repo edits the live config.
 
 Established symlinks on this machine:
 ```
@@ -20,7 +20,7 @@ Established symlinks on this machine:
 ~/.gitconfig              → git/.gitconfig
 ```
 
-There is **no sync/build step**. After editing, reload the relevant tool (e.g. `source ~/.zshrc`, `prefix + ,` in tmux, `super+shift+r` in Ghostty, `:Lazy sync` in nvim).
+Bootstrap once with `./bootstrap.sh` to install the symlinks. After that, edits go straight to live configs — reload the relevant tool to apply (e.g. `source ~/.zshrc`, `prefix + ,` in tmux, `super+shift+r` in Ghostty, `:Lazy sync` in nvim, save-to-reload for Alacritty).
 
 ## Validation commands
 

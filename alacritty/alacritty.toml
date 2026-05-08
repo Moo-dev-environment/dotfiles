@@ -16,6 +16,13 @@ import = [
 ]
 live_config_reload = true
 
+# ─── terminal ───
+# OSC52 lets the running program (nvim, tmux, ssh-tunneled apps) write to
+# and read from the system clipboard via escape sequences. Critical for
+# nvim's `"+y` over SSH and tmux copy-mode → system clipboard.
+[terminal]
+osc52 = "CopyPaste"
+
 # ─── window ───
 [window]
 opacity        = 0.96
