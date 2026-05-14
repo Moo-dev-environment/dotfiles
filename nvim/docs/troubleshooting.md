@@ -24,9 +24,9 @@ java -version    # should print 21+
 **Fix on macOS:**
 
 ```sh
-brew install openjdk@21
-sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk \
-             /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+brew install openjdk        # latest (25 as of 2026-05); use openjdk@21 for LTS
+sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk \
+             /Library/Java/JavaVirtualMachines/openjdk.jdk
 /usr/libexec/java_home -V    # confirm visibility
 ```
 
@@ -40,19 +40,37 @@ Restart Neovim, reopen the `.java` file.
 
 **Fix:** the shim is bundled at `~/.config/nvim/include/bits/stdc++.h`. The
 runner and competitest already pass `-I<stdpath("config")>/include`. Tell
-clangd by creating `~/.config/clangd/config.yaml`:
+clangd by pointing it at the same path via the repo's `clangd/config.yaml`,
+which `bootstrap.sh` symlinks into both clangd config locations:
 
-```yaml
-CompileFlags:
-  Add:
-    - -I/Users/<you>/.config/nvim/include
-    - -std=gnu++20
-    - -Wall
-    - -Wextra
-```
+- Linux: `~/.config/clangd/config.yaml`
+- macOS: `~/Library/Preferences/clangd/config.yaml` *(this is the one
+  clangd actually reads on macOS — `~/.config/clangd/` is ignored)*
 
-On Linux (GCC) you don't need this — the header already exists in the
+On Linux (GCC) the `-I` is harmless — the header already exists in the
 system include path.
+
+## clangd: namespace/header completions work, but `obj.method` shows nothing {#clangd-no-member-completions}
+
+**Symptom:** typing `std::` or top-level identifiers gives suggestions, but
+member completions on a typed receiver (`s.replace`, `v.push_back`) return
+no LSP results — buffer/snippet completions only.
+
+**Cause:** clangd's user config sets `Compiler: /opt/homebrew/bin/g++-15`
+(or another GCC). clangd is clang-based and parses GCC's libstdc++ headers
+well enough to index 12k+ symbols, but template instantiation through that
+combination is brittle on macOS — `s` ends up with an unresolved type, so
+member lookup yields nothing while namespace lookup still works.
+
+**Fix:** drop the `Compiler:` line. Let clangd use Apple clang + libc++,
+which the bundled `bits/stdc++.h` shim is written against. The repo's
+`clangd/config.yaml` already does this. After editing, `:LspRestart clangd`
+and wait ~10–20s for re-index.
+
+**Verify:** `:checkhealth vim.lsp` should show clangd attached, and
+`:LspLog` (or `~/.local/state/nvim/lsp.log`) should contain `Code complete:
+N results from Sema, M from Index` lines with non-zero `Sema` counts when
+you complete on a member access.
 
 ## Extras are not loading after editing `lazyvim.json`
 
