@@ -59,8 +59,6 @@ reasons; see "Cross-platform handling" below.
 - **`semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"`** — adds the box-drawing
   vertical bar `│` on top of the default set. Useful when double-clicking
   inside tmux or `ls -l` output.
-- **`builtin_box_drawing = true`** — Alacritty draws box/braille glyphs
-  itself instead of using the font's. Pixel-aligned at any zoom level.
 - **`option_as_alt = "OnlyLeft"`** (macOS) — Left-Option behaves as Alt
   (vim/zsh/tmux all want this). Right-Option keeps the OS diacritic flow
   (`⌥e e` → `é`).

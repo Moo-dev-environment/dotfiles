@@ -37,6 +37,18 @@ link() {
     return 0
   fi
 
+  # Refuse to link if the target's parent directory resolves into $REPO —
+  # otherwise the "back up existing file then create symlink" path will
+  # back up $src (because target_expanded resolves to it) and then symlink
+  # $src to itself. Seen 2026-05-09 via a stray ~/.config/ghostty dir-symlink.
+  local target_parent
+  target_parent="$(readlink -f -- "$(dirname -- "$target_expanded")" 2>/dev/null || true)"
+  if [[ -n "$target_parent" && "$target_parent" == "$REPO"* ]]; then
+    echo "  $(c_warn FAIL) $target  ($(c_dim "parent resolves into repo: $target_parent"))" >&2
+    echo "                 $(c_dim "remove the offending symlink and re-run") " >&2
+    exit 1
+  fi
+
   mkdir -p -- "$(dirname -- "$target_expanded")"
 
   if [[ -L "$target_expanded" ]]; then
@@ -101,7 +113,12 @@ link "~/.config/alacritty" "$REPO/alacritty"
 link "~/.config/bat/config" "$REPO/bat/config"
 
 # ── clangd ───────────────────────────────────────────────────────────
+# clangd reads its user config from a different path on macOS — link both so
+# the same repo file drives clangd regardless of platform.
 link "~/.config/clangd/config.yaml" "$REPO/clangd/config.yaml"
+if [[ "$OS" == "macos" ]]; then
+  link "~/Library/Preferences/clangd/config.yaml" "$REPO/clangd/config.yaml"
+fi
 
 # ── login shell ──────────────────────────────────────────────────────
 echo

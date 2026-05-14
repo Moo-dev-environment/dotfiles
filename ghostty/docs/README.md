@@ -32,10 +32,11 @@ The file holds **only customizations** — settings that match Ghostty's default
 
 ## Defensive locks
 
-Two blocks are kept explicit even though their values match current Ghostty defaults — they pin behavior so a future upstream default change can't loosen them silently:
+Three blocks are kept explicit even though their values match current Ghostty defaults — they pin behavior so a future upstream default change can't loosen them silently:
 
 - **Clipboard** — `clipboard-read = ask`, `clipboard-write = allow`. If a future Ghostty version flipped these to be more permissive, you'd want to know about it.
 - **macOS security** — `macos-auto-secure-input = true`, `macos-secure-input-indication = true`. Same reasoning for the lock icon and password-prompt protection.
+- **Keybinds** — every `keybind = …` line in `config` currently matches a Ghostty default. They're kept declared so an upstream rebind (e.g. `super+1` reassigned away from `goto_tab:1`) can't move muscle-memory keys without you noticing. Confirm the live set with `ghostty +list-keybinds`.
 
 Don't strip these as "redundant defaults" — they earn their lines.
 

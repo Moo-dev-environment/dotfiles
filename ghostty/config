@@ -50,6 +50,11 @@ macos-auto-secure-input       = true
 macos-secure-input-indication = true
 macos-non-native-fullscreen   = visible-menu
 
+# Keybinds — pinned defaults. Every binding below currently matches a
+# Ghostty default; keeping them explicit means a future upstream rebind
+# can't move them silently. Same defensive-lock pattern as the clipboard
+# and macOS-security blocks above. Run `ghostty +list-keybinds` for the
+# full effective set on your install.
 keybind = super+ctrl+space=toggle_quick_terminal
 keybind = super+shift+r=reload_config
 keybind = super+comma=open_config

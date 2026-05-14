@@ -16,6 +16,7 @@ Established symlinks on this machine:
 ~/.config/starship.toml   → starship/starship.toml
 ~/.config/bat/config      → bat/config
 ~/.config/clangd/config.yaml → clangd/config.yaml
+~/Library/Preferences/clangd/config.yaml → clangd/config.yaml   (macOS only — clangd ignores ~/.config/clangd here)
 ~/.config/alacritty       → alacritty/               (whole directory)
 ~/.gitconfig              → git/.gitconfig
 ```
@@ -68,7 +69,7 @@ Custom modules (the parts to actually edit):
 - `lua/plugins/all-themes.lua` — preloads ~20 colorschemes lazily so the Omarchy theme switcher can hot-swap.
 - `lua/plugins/omarchy-theme-hotreload.lua` — listens on the `LazyReload` user event, re-resolves the colorscheme from LazyVim opts, re-applies it, and re-sources `after/plugin/transparency.lua`. This is what lets Omarchy's external theme rewrites propagate without restarting nvim.
 - `lua/config/autocmds.lua` — `BufNewFile` autocmds insert CP boilerplate from `templates/`. Java template substitutes both `$(JAVA_TASK_CLASS)` and `$(FNOEXT)` so the same file works for plain `:e Foo.java` and CompetiTest-spawned files.
-- `include/bits/stdc++.h` — shim for macOS clangd (Apple's libc++ doesn't ship this GCC header). The runner and competitest both pass `-I<stdpath('config')>/include`. To make clangd happy in editor diagnostics, drop the same `-I` line into `~/.config/clangd/config.yaml` (see `nvim/docs/troubleshooting.md`).
+- `include/bits/stdc++.h` — shim for macOS clangd (Apple's libc++ doesn't ship this GCC header). The runner and competitest both pass `-I<stdpath('config')>/include`. The repo's `clangd/config.yaml` adds the same `-I` so editor diagnostics resolve. **Note:** on macOS clangd reads its user config from `~/Library/Preferences/clangd/config.yaml`, not `~/.config/clangd/`, so `bootstrap.sh` symlinks both paths to the repo file. Don't add `Compiler: g++-...` to that config — it breaks member-completion type resolution against the libc++-targeted shim (see `nvim/docs/troubleshooting.md`).
 
 The `nvim/docs/` directory is the user-facing manual — `cpp.md`, `competitive-programming.md`, `keymaps.md`, `troubleshooting.md`. Update these when changing the user-visible behavior.
 
