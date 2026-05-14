@@ -183,7 +183,7 @@ resurrect + continuum:
 2. Next tmux server start auto-restores from the latest snapshot.
 3. Manual save / restore: `prefix + Ctrl+s` / `prefix + Ctrl+r`.
 
-**Not** restored: live process state. resurrect re-runs the recorded command line; it doesn't preserve PIDs, file handles, or in-memory state. Programs in `@resurrect-processes` (`ssh nvim vim vi htop btop k9s less more man tail watch`) get respawned by command.
+**Not** restored: live process state. resurrect re-runs the recorded command line; it doesn't preserve PIDs, file handles, or in-memory state. Programs in `@resurrect-processes` (`ssh nvim vim htop btop k9s less more man tail watch`) get respawned by command.
 
 > **Privacy:** Pane-contents capture writes whatever scrolled by. Wipe `~/.local/share/tmux/resurrect/` if you ever pasted credentials.
 
