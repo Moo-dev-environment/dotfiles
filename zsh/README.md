@@ -76,7 +76,7 @@ These constraints are enforced by file order. Don't reorder casually — the con
 - Emacs mode (`bindkey -e`).
 - `WORDCHARS` is stripped of `/`, `=`, `:` — Ctrl-W now stops at path components, env-var assignments, and URL boundaries instead of eating whole paths.
 - `^F`, `^]`, `^Space` all accept the autosuggestion. `^F` is the primary one because tmux owns `^Space` and `^]` is awkward.
-- `^Q` is rebound to `push-line-or-edit`. Most modern terminals don't use `^Q`/`^S` for flow control.
+- `^Q` is rebound to `push-line-or-edit`. The config also runs `stty -ixon` on interactive shells so XON/XOFF flow control can't swallow the keypress before zle sees it.
 
 ### FZF
 - **Bind values that contain whitespace, pipes, or parens MUST be wrapped in single quotes** in the final `FZF_DEFAULT_OPTS` string. fzf parses that env var like a shell command line; an unquoted pipe gets word-split and fzf bails with `invalid command line string`. The clipboard-yank bind is built as a separate variable so the action body (`execute-silent(echo {+} | pbcopy)`) can be single-quoted without colliding with zsh's `${var:+...}` brace matching.

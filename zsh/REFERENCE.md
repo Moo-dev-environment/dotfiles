@@ -225,7 +225,7 @@ Fallback (`ls`): `ls -G` (macOS) or `ls --color=auto` (Linux).
 | `rg`    | `grep`   | ripgrep   | Smart-case by default                       |
 | `rgs`   | —        | ripgrep   | Also searches hidden/ignored files          |
 | `rgl`   | —        | ripgrep   | List matching files only                    |
-| `diff`  | `diff`   | delta     | Syntax-highlighted diffs                    |
+| `deltadiff` | —    | delta     | `diff -u` piped through delta (not aliased over `diff(1)`) |
 | `df`    | `df`     | duf       | Nicer disk usage summary                    |
 | `top`   | `top`    | btop      | Modern system monitor                       |
 | `usage` | `du`     | dust      | Visual disk usage tree                      |

@@ -109,7 +109,7 @@ unset _zc_dir
 autoload -Uz compinit
 ZSH_CACHE_DIR="${XDG_CACHE_HOME}/zsh"
 mkdir -p "$ZSH_CACHE_DIR"
-if [[ -n "$ZSH_CACHE_DIR/zcompdump"(#qN.mh+24) ]]; then
+if [[ ! -f "$ZSH_CACHE_DIR/zcompdump" || -n "$ZSH_CACHE_DIR/zcompdump"(#qN.mh+24) ]]; then
   compinit -i -d "$ZSH_CACHE_DIR/zcompdump"
 else
   compinit -C -d "$ZSH_CACHE_DIR/zcompdump"
@@ -178,9 +178,15 @@ zle -N edit-command-line
 bindkey '^X^E' edit-command-line
 bindkey '^Q' push-line-or-edit
 
+# Free ^Q / ^S from terminal flow control so the bindings above actually reach zle.
+[[ -t 0 ]] && stty -ixon 2>/dev/null
+
 autoload -Uz modify-current-argument
-_single_quote_word() { modify-current-argument "'${ARG//\'/\\'\\''}'"; }
-_double_quote_word() { modify-current-argument "\"${ARG}\""; }
+# Expression is single-quoted so $ARG is expanded by modify-current-argument at
+# eval time (when it's set), not at call time (when it's empty). The (qq) /
+# (qqq) flags quote the current argument with single / double quotes.
+_single_quote_word() { modify-current-argument '${(qq)ARG}' }
+_double_quote_word() { modify-current-argument '${(qqq)ARG}' }
 zle -N _single_quote_word
 zle -N _double_quote_word
 bindkey "^['" _single_quote_word
@@ -391,7 +397,10 @@ command -v lazygit &>/dev/null && alias lg='lazygit'
 command -v btop    &>/dev/null && alias top='btop'
 command -v dust    &>/dev/null && alias usage='dust'
 command -v procs   &>/dev/null && alias psa='procs'
-command -v delta   &>/dev/null && alias deltadiff='diff -u'   # delta is a pager, not a diff(1) replacement
+if command -v delta &>/dev/null; then
+  # delta is a pager, not a diff(1) replacement — wrap, don't alias `diff`.
+  deltadiff() { command diff -u "$@" | delta }
+fi
 command -v duf     &>/dev/null && alias df='duf'
 command -v tldr    &>/dev/null && alias help='tldr'
 
@@ -555,7 +564,7 @@ extract() {
 }
 
 up() {
-  local n="${1:-1}" d=""
+  local n="${1:-1}" d="" i
   for ((i=0; i<n; i++)); do d="../$d"; done
   cd "$d" || return
 }
@@ -582,7 +591,7 @@ fcd() {
 
 fkill() {
   local pid
-  pid=$(ps aux | fzf --header='Select process to kill' --prompt='❯ ' | awk '{print $2}')
+  pid=$(ps aux | fzf --header-lines=1 --header='Select process to kill' --prompt='❯ ' | awk '{print $2}')
   [[ -n "$pid" ]] && kill -"${1:-9}" "$pid" && echo "Killed PID $pid"
 }
 
@@ -687,7 +696,13 @@ dip() {
   done
 }
 
-lip() { pgrep -af "ssh.*-L [0-9]+:localhost:[0-9]+" || echo "No active forwards" }
+lip() {
+  # pgrep -af prints full cmdline on Linux but only ancestors-included PIDs on
+  # macOS, so use ps directly for a portable "PID + command" listing.
+  local out
+  out=$(ps -eo pid=,command= 2>/dev/null | awk '/[s]sh.*-L [0-9]+:localhost:[0-9]+/')
+  [[ -n "$out" ]] && print -r -- "$out" || echo "No active forwards"
+}
 
 if [[ $_os == linux ]] \
   && command -v lsblk &>/dev/null \
