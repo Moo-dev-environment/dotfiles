@@ -42,7 +42,6 @@ return {
             "-Wextra",
             "-Wshadow",
             "-DLOCAL",
-            "-I" .. vim.fn.stdpath("config") .. "/include",
             "-o",
             "$(FNOEXT)",
             "$(FNAME)",
@@ -81,14 +80,6 @@ return {
       received_contests_problems_path = "$(PROBLEM).$(FEXT)",
       received_contests_prompt_directory = true,
       received_contests_prompt_extension = true,
-
-      template_file = {
-        cpp = vim.fn.stdpath("config") .. "/templates/cp.cpp",
-        c = vim.fn.stdpath("config") .. "/templates/cp.c",
-        java = vim.fn.stdpath("config") .. "/templates/Main.java",
-        python = vim.fn.stdpath("config") .. "/templates/cp.py",
-      },
-      evaluate_template_modifiers = true,
 
       companion_port = 27121,
       receive_print_message = true,

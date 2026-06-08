@@ -13,7 +13,7 @@ shortlist of issues that are still likely to bite.
 **Cause:** no JDK runtime available on `$PATH`. jdtls is itself a Java
 program and needs a **JRE ≥ 21** to launch.
 
-**Fix on Linux (Arch / Omarchy):**
+**Fix:**
 
 ```sh
 sudo pacman -S jdk21-openjdk
@@ -21,56 +21,25 @@ sudo archlinux-java set java-21-openjdk
 java -version    # should print 21+
 ```
 
-**Fix on macOS:**
-
-```sh
-brew install openjdk        # latest (25 as of 2026-05); use openjdk@21 for LTS
-sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk \
-             /Library/Java/JavaVirtualMachines/openjdk.jdk
-/usr/libexec/java_home -V    # confirm visibility
-```
-
 Restart Neovim, reopen the `.java` file.
 
-## `fatal error: 'bits/stdc++.h' file not found` (clangd / Apple clang) {#fatal-error-bitsstdch-file-not-found-clangd--apple-clang}
+## `fatal error: 'bits/stdc++.h' file not found`
 
-**Symptom:** clangd red-squiggles `#include <bits/stdc++.h>` on macOS.
+**Symptom:** clangd red-squiggles `#include <bits/stdc++.h>`, or `g++`
+errors on it.
 
-**Cause:** Apple clang's libc++ does not ship that GCC convenience header.
+**Cause:** the GCC C++ headers aren't installed. `<bits/stdc++.h>` is a
+libstdc++ convenience header that ships with `gcc` (not clang).
 
-**Fix:** the shim is bundled at `~/.config/nvim/include/bits/stdc++.h`. The
-runner and competitest already pass `-I<stdpath("config")>/include`. Tell
-clangd by pointing it at the same path via the repo's `clangd/config.yaml`,
-which `bootstrap.sh` symlinks into both clangd config locations:
+**Fix:**
 
-- Linux: `~/.config/clangd/config.yaml`
-- macOS: `~/Library/Preferences/clangd/config.yaml` *(this is the one
-  clangd actually reads on macOS — `~/.config/clangd/` is ignored)*
+```sh
+sudo pacman -S gcc        # provides /usr/include/c++/<ver>/.../bits/stdc++.h
+```
 
-On Linux (GCC) the `-I` is harmless — the header already exists in the
-system include path.
-
-## clangd: namespace/header completions work, but `obj.method` shows nothing {#clangd-no-member-completions}
-
-**Symptom:** typing `std::` or top-level identifiers gives suggestions, but
-member completions on a typed receiver (`s.replace`, `v.push_back`) return
-no LSP results — buffer/snippet completions only.
-
-**Cause:** clangd's user config sets `Compiler: /opt/homebrew/bin/g++-15`
-(or another GCC). clangd is clang-based and parses GCC's libstdc++ headers
-well enough to index 12k+ symbols, but template instantiation through that
-combination is brittle on macOS — `s` ends up with an unresolved type, so
-member lookup yields nothing while namespace lookup still works.
-
-**Fix:** drop the `Compiler:` line. Let clangd use Apple clang + libc++,
-which the bundled `bits/stdc++.h` shim is written against. The repo's
-`clangd/config.yaml` already does this. After editing, `:LspRestart clangd`
-and wait ~10–20s for re-index.
-
-**Verify:** `:checkhealth vim.lsp` should show clangd attached, and
-`:LspLog` (or `~/.local/state/nvim/lsp.log`) should contain `Code complete:
-N results from Sema, M from Index` lines with non-zero `Sema` counts when
-you complete on a member access.
+Both `g++` and clangd then resolve it from the default include path — no
+`-I` shim needed. After installing, `:LspRestart clangd` and wait ~10–20s
+for the re-index.
 
 ## Extras are not loading after editing `lazyvim.json`
 

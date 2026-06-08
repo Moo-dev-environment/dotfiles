@@ -9,46 +9,14 @@ Two complementary tools:
   `lua/config/keymaps.lua`) — debugging loop: hit one key, see stdout in a
   tmux pane.
 
-## Templates
-
-Source files live in `~/.config/nvim/templates/`:
-
-| File              | Used by competitest for | Notes |
-|-------------------|--------------------------|-------|
-| `cp.cpp`          | `.cpp`                   | `#include <bits/stdc++.h>`, common typedefs, `solve()`, optional multi-testcase loop, `dbg(...)` macro. |
-| `cp.c`            | `.c`                     | C equivalent. |
-| `cp.py`           | `.py`                    | Python skeleton. |
-| `Main.java`       | `.java`                  | Class name placeholder replaced at insert time. |
-
-competitest reads these via the `template_file` table in
-`lua/plugins/competitest.lua` when receiving problems. **They are also
-auto-inserted on plain `:e new.cpp`** (and `.cc` / `.cxx`) by a
-`BufNewFile` autocmd in `lua/config/autocmds.lua`. The Java template is
-treated specially: both `$(JAVA_TASK_CLASS)` and `$(FNOEXT)` are replaced
-with the file's basename so the public class name matches the filename
-(required by `javac`) regardless of whether the file was created by
-CompetiTest or by hand.
-
 ## `<bits/stdc++.h>`
 
-`~/.config/nvim/include/bits/stdc++.h` is bundled. It's referenced by:
-
-1. **competitest's compile command** for C++ (passes
-   `-I<stdpath("config")>/include` — see `lua/plugins/competitest.lua`).
-2. **The custom runner** (`lua/cp/runner.lua`).
-
-On **macOS** with Apple clang the system headers don't include this file,
-so clangd will red-squiggle `#include <bits/stdc++.h>` unless you also tell
-clangd about the path. Create `~/.config/clangd/config.yaml`:
-
-```yaml
-CompileFlags:
-  Add:
-    - -I/Users/<you>/.config/nvim/include
-    - -std=gnu++20
-```
-
-On Linux with GCC the header already exists in `/usr/include/c++/<ver>/x86_64-pc-linux-gnu/bits/stdc++.h`, so the bundled shim is just a fallback.
+On Arch this ships with GCC at
+`/usr/include/c++/<ver>/x86_64-pc-linux-gnu/bits/stdc++.h`, so it's on the
+default include path for both `g++` and clangd — nothing extra to configure.
+Your CP sources `#include <bits/stdc++.h>` directly; the runner and
+competitest compile with `g++`, and editor diagnostics come from clangd,
+all of which find it natively.
 
 ## competitest.nvim
 
@@ -59,7 +27,7 @@ On Linux with GCC the header already exists in `/usr/include/c++/<ver>/x86_64-pc
 | `<leader>tR`  | `:CompetiTestRun`                   | Compile + run every test case. |
 | `<leader>tu`  | `:CompetiTestRunNoCompile`          | Run without recompiling. |
 | `<leader>tr`  | `:CompetiTestReceive testcases`     | Receive test cases from the browser. |
-| `<leader>tp`  | `:CompetiTestReceive problem`       | Receive a whole problem (creates source file from template + tests). |
+| `<leader>tp`  | `:CompetiTestReceive problem`       | Receive a whole problem (creates source file + tests). |
 | `<leader>tc`  | `:CompetiTestReceive contest`       | Receive an entire contest as a batch. |
 
 ### Test case layout
@@ -81,7 +49,7 @@ Tests live next to the source (not in a subdir):
 
 ### Compile/run defaults (from `lua/plugins/competitest.lua`)
 
-- **C++**: `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o $(FNOEXT) $(FNAME)`
+- **C++**: `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -o $(FNOEXT) $(FNAME)`
 - **C**:   `gcc -O2 -std=gnu17 -Wall -Wextra -o $(FNOEXT) $(FNAME) -lm`
 - **Java**: `javac` then `java $(FNOEXT)`
 - **Python**: no compile, `python3 $(FNAME)` to run
@@ -133,7 +101,7 @@ Outside tmux it falls back to `:botright 15split | terminal`.
 | Extension           | Compile                                                                 | Run             |
 |---------------------|-------------------------------------------------------------------------|------------------|
 | `.c`                | `gcc -O2 -std=gnu17 -Wall -Wextra -o <stem> <name> -lm`                 | `./<stem>`       |
-| `.cpp/.cc/.cxx`     | `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I<shim> -o <stem> <name>` | `./<stem>` |
+| `.cpp/.cc/.cxx`     | `g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -o <stem> <name>` | `./<stem>` |
 | `.java`             | `javac <name>`                                                          | `java <stem>`    |
 | `.py`               | (none)                                                                  | `python3 <path>` |
 
@@ -143,4 +111,4 @@ Outside tmux it falls back to `:botright 15split | terminal`.
   diffs against many expected outputs.
 - **Custom runner** for the inner debug loop while you're iterating —
   faster to invoke, output stays in a tmux pane you can scroll, pairs with
-  the `dbg(...)` macro from the C++ template.
+  a `dbg(...)` macro in your `-DLOCAL` boilerplate.

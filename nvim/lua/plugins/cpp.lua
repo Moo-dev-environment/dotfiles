@@ -53,9 +53,8 @@ return {
           local out = dir .. "/" .. stem
           local cc = ft == "cpp" and "g++" or "gcc"
           local std = ft == "cpp" and "-std=gnu++20" or "-std=gnu17"
-          local inc = vim.fn.stdpath("config") .. "/include"
 
-          local cmd = { cc, "-O0", "-g3", std, "-Wall", "-Wextra", "-DLOCAL", "-I" .. inc, "-o", out, path }
+          local cmd = { cc, "-O0", "-g3", std, "-Wall", "-Wextra", "-DLOCAL", "-o", out, path }
           local r = vim.system(cmd, { text = true }):wait()
           if r.code ~= 0 then
             return vim.notify("Compile failed:\n" .. (r.stderr or ""), vim.log.levels.ERROR)

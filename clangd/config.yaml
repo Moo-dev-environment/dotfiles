@@ -1,8 +1,8 @@
 # Global clangd config — applied to all C/C++ files without a local compile_commands.json.
-# Adds the shim include dir so <bits/stdc++.h> resolves on Apple clang.
+# On Arch, GCC ships <bits/stdc++.h> in the default include path, so clangd
+# resolves it natively — no extra -I needed.
 CompileFlags:
   Add:
-    - -I/Users/mo/.config/nvim/include
     - -std=gnu++20
     - -Wall
     - -Wextra

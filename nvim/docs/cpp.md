@@ -2,8 +2,8 @@
 
 How to run, test, debug, and format C/C++ in this config.
 
-The CP-specific scaffolding (CompetiTest, custom runner, templates, the
-`bits/stdc++.h` shim) is documented in
+The CP-specific scaffolding (CompetiTest, custom runner) is
+documented in
 [`competitive-programming.md`](competitive-programming.md). This page is
 the **task-oriented "how do I do X"** view.
 
@@ -16,8 +16,8 @@ the **task-oriented "how do I do X"** view.
 | Debugger | `codelldb` via `nvim-dap` | `lazyvim.plugins.extras.dap.core` + `lang.clangd` |
 | Single-file run | custom `cp.runner` | `lua/cp/runner.lua` |
 | Multi-testcase grading | CompetiTest | `lua/plugins/competitest.lua` |
-| Compile flags (run/test) | `-O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I~/.config/nvim/include` | runner + competitest |
-| Compile flags (debug) | `-O0 -g3 -std=gnu++20 -Wall -Wextra -DLOCAL -I~/.config/nvim/include` | `<leader>rD` in `cpp.lua` |
+| Compile flags (run/test) | `-O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL` | runner + competitest |
+| Compile flags (debug) | `-O0 -g3 -std=gnu++20 -Wall -Wextra -DLOCAL` | `<leader>rD` in `cpp.lua` |
 | Mason-pinned tools | `clangd`, `clang-format`, `codelldb` | `lua/plugins/cpp.lua` |
 
 ## Three ways to run code
@@ -43,8 +43,7 @@ is set.
 
 **Typical flow:**
 
-1. `:e sol.cpp` → opens a buffer (CP template auto-fills via the
-   `BufNewFile` autocmd in `lua/config/autocmds.lua`).
+1. `:e sol.cpp` → opens an empty buffer; paste or type your boilerplate.
 2. Write `solve()`.
 3. `<leader>ri` → paste sample input → `:wq`.
 4. `<leader>rr` → tmux pane shows stdout, exit code, and `time` numbers.
@@ -60,7 +59,7 @@ browser extension (port `27121`).
 | Keys | Action |
 |---|---|
 | `<leader>tr` | Receive testcases for the current file from the browser |
-| `<leader>tp` | Receive a problem (creates source from template + tests under `~/cp/$JUDGE/$CONTEST/`) |
+| `<leader>tp` | Receive a problem (creates source + tests under `~/cp/$JUDGE/$CONTEST/`) |
 | `<leader>tc` | Receive an entire contest |
 | `<leader>ta` | Add a testcase manually |
 | `<leader>te` | Edit existing testcases |
@@ -145,23 +144,11 @@ manual edits.
 
 ## `<bits/stdc++.h>`
 
-Bundled at `~/.config/nvim/include/bits/stdc++.h`. Both the runner and
-CompetiTest pass `-I~/.config/nvim/include`, so it's always in scope. On
-Linux with GCC the header already exists in
-`/usr/include/c++/<ver>/x86_64-pc-linux-gnu/bits/stdc++.h` — the bundled
-shim is a fallback for non-GCC toolchains. macOS clangd needs an extra
-config file; see
-[`troubleshooting.md`](troubleshooting.md#fatal-error-bitsstdch-file-not-found-clangd--apple-clang).
-
-## Templates
-
-`BufNewFile *.cpp,*.cc,*.cxx` reads `~/.config/nvim/templates/cp.cpp` into
-the new buffer (`lua/config/autocmds.lua`). The template includes
-`bits/stdc++.h`, common typedefs (`ll`, `pii`, `vi`, …), `all(x)` /
-`sz(x)` macros, a `dbg(x)` macro that's a no-op without `-DLOCAL`, and a
-`solve()` skeleton with an optional multi-testcase loop.
-
-Same idea for `.c`, `.py`, `.java` — see the templates dir.
+Ships with GCC on Arch at
+`/usr/include/c++/<ver>/x86_64-pc-linux-gnu/bits/stdc++.h`, so both `g++`
+and clangd resolve it from the default include path — no `-I` and no shim
+needed. If it's ever reported missing, install `gcc` (see
+[`troubleshooting.md`](troubleshooting.md#fatal-error-bitsstdch-file-not-found)).
 
 ## Tooling installs (Mason)
 
@@ -184,7 +171,7 @@ nvim a.cpp
 
 In nvim:
 
-1. Template auto-fills. Replace `solve()` with:
+1. Write a short program whose `solve()` is:
    ```cpp
    void solve() {
        int n; cin >> n;

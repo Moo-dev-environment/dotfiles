@@ -1,0 +1,10 @@
+return {
+  {
+    "okuuva/auto-save.nvim",
+    cmd = "ASToggle", -- optional for lazy loading on command
+    event = { "InsertLeave", "TextChanged" }, -- optional for lazy loading on events
+    opts = {
+      -- your config goes here, or leave empty for defaults
+    },
+  },
+}

@@ -19,3 +19,9 @@ end, { desc = "Edit expected_output.txt" })
 map("n", "<leader>rd", function()
   require("cp.runner").diff_output()
 end, { desc = "Diff output vs expected" })
+
+-- Fast Vertical Resizing
+map("n", "<leader>[", ":vertical resize -10<CR>", { desc = "Resize split left (Small)" })
+map("n", "<leader>]", ":vertical resize +10<CR>", { desc = "Resize split right (Small)" })
+map("n", "<leader>{", ":vertical resize -30<CR>", { desc = "Resize split left (Large)" })
+map("n", "<leader>}", ":vertical resize +30<CR>", { desc = "Resize split right (Large)" })

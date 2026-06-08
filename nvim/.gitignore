@@ -6,3 +6,8 @@ debug
 foo.*
 *.log
 data
+
+# Theme is managed by Omarchy per-machine: ~/.config/nvim/lua/plugins/theme.lua
+# is a symlink to ~/.config/omarchy/current/theme/neovim.lua, rewritten on every
+# `omarchy-theme-set`. Don't track it here — the live symlink is the source of truth.
+lua/plugins/theme.lua

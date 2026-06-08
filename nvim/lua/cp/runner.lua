@@ -45,11 +45,9 @@ local LANG = {
       return b.ext == "cpp" or b.ext == "cc" or b.ext == "cxx"
     end,
     compile = function(b)
-      local includes = vim.fn.stdpath("config") .. "/include"
       return string.format(
-        "cd %s && g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -I%s -o %s %s",
+        "cd %s && g++ -O2 -std=gnu++20 -Wall -Wextra -Wshadow -DLOCAL -o %s %s",
         shquote(b.dir),
-        shquote(includes),
         shquote(b.stem),
         shquote(b.name)
       )

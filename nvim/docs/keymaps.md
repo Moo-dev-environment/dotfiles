@@ -34,14 +34,38 @@ visible after the program exits.
 | `<leader>tR`   | Run all test cases                                  |
 | `<leader>tu`   | Run without recompiling                             |
 | `<leader>tr`   | Receive test cases (Competitive Companion browser)  |
-| `<leader>tp`   | Receive full problem (creates source from template) |
+| `<leader>tp`   | Receive full problem (creates source + tests)       |
 | `<leader>tc`   | Receive entire contest                              |
+
+## Editor & navigation tools
+
+Full how-to with examples in [`tools.md`](tools.md); this is just the key list.
+
+| Keys | Action | Tool |
+|------|--------|------|
+| `gsa` / `gsd` / `gsr` | add / delete / replace surrounding quotes·brackets | mini.surround |
+| `<C-a>` / `<C-x>` | increment / decrement (numbers, dates, `true`/`false`) | dial.nvim |
+| `g<C-a>` / `g<C-x>` | sequential inc/dec over a visual selection | dial.nvim |
+| `<leader>H` | pin current file | harpoon |
+| `<leader>h` | open harpoon quick menu | harpoon |
+| `<leader>1` … `<leader>5` | jump to pinned file 1…5 | harpoon |
+| `<leader>U` | toggle undo-history tree | undotree |
+| `<leader>uK` | toggle sticky scope header | treesitter-context |
+| `<leader>gdo` / `<leader>gdc` | open / close git diff view | diffview |
+| `<leader>gdh` / `<leader>gdH` | file / repo git history | diffview |
+| `<C-h/j/k/l>` | move across nvim splits **and** tmux panes | vim-tmux-navigator |
+| `<S-Tab>` | accept Copilot ghost-text suggestion | Copilot |
+| `<M-]>` / `<M-[>` / `<C-]>` | next / prev / dismiss Copilot suggestion | Copilot |
+
+Commands (no default keymap): `:Leet` (LeetCode), `:Copilot auth` (sign in),
+`:ASToggle` (turn auto-save off/on). treesitter-context, rainbow-delimiters,
+nvim-colorizer and auto-save run automatically with no key to press.
 
 ## What you get from LazyVim extras (no extra config)
 
-The five enabled extras (`dap.core`, `editor.neo-tree`, `lang.clangd`,
-`lang.python`, `lang.java`) provide their own keymaps via LazyVim's
-standard groups:
+The enabled extras (`coding.mini-surround`, `dap.core`, `editor.harpoon2`,
+`editor.neo-tree`, `lang.clangd`, `lang.python`, `lang.java`, plus the
+`ai.copilot` import) provide their own keymaps via LazyVim's standard groups:
 
 - **DAP** — `<leader>d*` group (toggle breakpoint, continue, step in/over/out,
   REPL, etc.). Reference: <https://www.lazyvim.org/extras/dap/core#keymaps>.
