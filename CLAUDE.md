@@ -4,125 +4,204 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Personal macOS-first dotfiles (with secondary Arch/Omarchy support) for **zsh, Neovim, tmux, Ghostty, Alacritty, Starship, git, bat, clangd**. Files are **symlinked into `$HOME` / `$XDG_CONFIG_HOME`** by `bootstrap.sh` (idempotent — already-correct symlinks are left alone, real files are backed up to `*.backup-<UTC ts>`). After bootstrap, editing a file in this repo edits the live config.
+Personal **Omarchy** (Arch Linux + Hyprland) dotfiles for **Hyprland, Waybar,
+tmux, Neovim, Alacritty, Starship, fastfetch, clangd** (plus dormant **zsh** and
+reference-only **bash** configs). Each tool lives in its own top-level directory
+and is **symlinked into `$HOME` / `$XDG_CONFIG_HOME`**, so editing a file in this
+repo edits the live config directly — no copy/sync step.
 
-Established symlinks on this machine:
-```
-~/.zshrc                  → zsh/.zshrc
-~/.zprofile               → zsh/.zprofile
-~/.config/nvim            → nvim/                    (whole directory)
-~/.config/tmux/tmux.conf  → tmux/tmux.conf
-~/.config/ghostty/config  → ghostty/config
-~/.config/starship.toml   → starship/starship.toml
-~/.config/bat/config      → bat/config
-~/.config/clangd/config.yaml → clangd/config.yaml
-~/Library/Preferences/clangd/config.yaml → clangd/config.yaml   (macOS only — clangd ignores ~/.config/clangd here)
-~/.config/alacritty       → alacritty/               (whole directory)
-~/.gitconfig              → git/.gitconfig
+**The guiding principle: the live config is the source of truth.** The repo
+tracks what is actually running on the machine. When they diverge, the live
+config wins and gets copied back into the repo.
+
+### Symlink reality (verified)
+
+| Live path | Repo source | State |
+|---|---|---|
+| `~/.config/nvim` | `nvim/` | symlink (whole dir) |
+| `~/.config/hypr` | `hypr/` | symlink (whole dir) |
+| `~/.config/waybar` | `waybar/` | symlink (whole dir) |
+| `~/.config/alacritty` | `alacritty/` | symlink (whole dir) |
+| `~/.config/fastfetch` | `fastfetch/` | symlink (whole dir) |
+| `~/.config/tmux/tmux.conf` | `tmux/tmux.conf` | symlink (single file) |
+| `~/.config/starship.toml` | `starship/starship.toml` | symlink (single file) |
+| `~/.bashrc`, `~/.bash_profile`, `~/.profile`, `~/.bash_logout` | `bash/` | **copy only — NOT symlinked** |
+| `~/.zshrc`, `~/.zprofile` | `zsh/` | **not symlinked; zsh is dormant** (login shell is **bash**) |
+| `~/.config/clangd/config.yaml` | `clangd/config.yaml` | **not deployed** (`~/.config/clangd/` is absent) |
+
+Things to know:
+- **bash is the login shell**, and its files are copied here for reference, not
+  symlinked — editing `bash/` does not change the live shell. See `bash/README.md`.
+- **zsh is legacy/dormant** — the config still lives in `zsh/` but isn't linked or
+  active. Don't assume edits there affect anything live.
+- **clangd's repo config isn't currently linked** into `~/.config/clangd/`. If you
+  need editor-wide clangd flags applied, the symlink has to be created; today
+  nvim's own `cpp.lua` is what passes compile flags. See `clangd/README.md`.
+- There is currently **no `bootstrap.sh`** — the symlinks were created by hand.
+  A clean-checkout installer would need to be (re)written. Don't invent one
+  unless asked.
+
+### Re-creating a symlink by hand
+
+```sh
+# whole-dir tool (back up the original first):
+mv ~/.config/hypr ~/.config/hypr.backup-$(date -u +%Y%m%dT%H%M%SZ)
+ln -s ~/GITHUB/dotfiles/hypr ~/.config/hypr
+# single-file tool:
+ln -sf ~/GITHUB/dotfiles/tmux/tmux.conf ~/.config/tmux/tmux.conf
 ```
 
-Bootstrap once with `./bootstrap.sh` to install the symlinks. After that, edits go straight to live configs — reload the relevant tool to apply (e.g. `source ~/.zshrc`, `prefix + ,` in tmux, `super+shift+r` in Ghostty, `:Lazy sync` in nvim, save-to-reload for Alacritty).
+Backups of replaced files/dirs are parked next to the original as
+`*.backup-<UTC-timestamp>` and are gitignored — clean them up before committing.
+
+## Per-tool docs are the source of truth
+
+Every tool directory has a **`README.md` documenting its config line by line**,
+how to use the tool, and a *validate-after-editing* section. **When you change a
+config, update that tool's README.** Index: top-level `README.md`.
+
+- `hypr/README.md` · `waybar/README.md` · `tmux/README.md` · `starship/README.md`
+- `alacritty/README.md` · `fastfetch/README.md` · `clangd/README.md` · `bash/README.md`
+- `nvim/README.md` + `nvim/docs/` (and `nvim/CLAUDE.md` for nvim-specific guidance)
+- `zsh/README.md` + `zsh/REFERENCE.md`
+
+> The older top-level `docs/` (`ARCHITECTURE.md`, `CONFIGS.md`, `CUSTOMIZATION.md`,
+> `SETUP.md`, `TROUBLESHOOTING.md`) predate the Omarchy migration and are **stale**
+> — they describe a macOS-first cross-platform repo with `bootstrap.sh`,
+> `ghostty/`, `git/`, `bat/` and zsh `conf.d/` modules that no longer exist. Don't
+> trust them; prefer the per-tool READMEs.
 
 ## Validation commands
 
-Use these to verify a config change before declaring it safe — most validate without disturbing running instances:
+Validate a change before declaring it safe (most don't disturb running instances):
 
 | Tool | Command |
 |---|---|
-| zsh | `zsh -i -c ':'` (full interactive load); timing: `zsh -ixc : 2>&1 \| ts -i '%.s' \| tail -50` |
-| tmux | `tmux -L _check -f /Users/mo/GITHUB/dotfiles/tmux/tmux.conf start-server \; kill-server` (uses isolated socket — won't touch your running tmux) |
-| Ghostty | `ghostty +validate-config --config-file=/Users/mo/GITHUB/dotfiles/ghostty/config` |
-| Starship | `STARSHIP_CONFIG=/Users/mo/GITHUB/dotfiles/starship/starship.toml starship print-config` (parse) / `... starship timings` (perf) |
+| Hyprland | `Hyprland --verify-config` (prints `config ok`); apply with `hyprctl reload` |
+| Waybar | `timeout 3 waybar -c ~/.config/waybar/config.jsonc -s ~/.config/waybar/style.css` (errors → stderr) |
+| tmux | `tmux -L _check -f ~/.config/tmux/tmux.conf start-server \; kill-server` (isolated socket) |
+| Alacritty | `alacritty migrate --dry-run -c ~/.config/alacritty/alacritty.toml`; live-reloads on save |
+| Starship | `STARSHIP_CONFIG=~/.config/starship.toml starship print-config` (parse) / `starship timings` (perf) |
+| fastfetch | `fastfetch -c ~/.config/fastfetch/config.jsonc --logo none >/dev/null && echo OK` |
 | Neovim | `nvim --headless "+Lazy! sync" +qa` (plugins) / `nvim --headless "+checkhealth" +qa` |
+| bash | `bash -n ~/.bashrc && echo OK` (syntax) / `bash -ic ':'` (interactive load) |
 
-When inspecting a tool, prefer reading from the repo path (these files) rather than the `~/.config` path — they're the same file via symlink, but the repo path is canonical.
+When inspecting a tool, read from the repo path (these files), not `~/.config/…` —
+same file via symlink, but the repo path is canonical.
+
+## Omarchy theme integration
+
+Alacritty, Waybar, Hyprland, Neovim and fastfetch don't hardcode colours — they
+**import the active Omarchy theme** from `~/.config/omarchy/current/theme/…`.
+Switching themes in Omarchy rewrites those files and the tools restyle
+automatically. This is why several tools are symlinked **whole-directory**: a
+relative `@import` (e.g. `waybar/style.css`) must keep resolving through the link.
+
+**Never edit Omarchy's managed files** under `~/.local/share/omarchy/` or
+`~/.config/omarchy/` — they're overwritten on Omarchy update. Override them in
+*these* repo files (which are sourced/imported after the defaults).
 
 ## Architecture per tool
 
-### zsh — single-file config with ordering invariants
+### Hyprland (`hypr/`) — the compositor, Omarchy-layered
 
-`zsh/.zshrc` is one ~900-line file (no plugin manager, no `conf.d/` split). Sections execute top-to-bottom and **order is load-bearing**. Before reordering anything, read `zsh/README.md` § "Ordering invariants" — the constraints there (e.g. fzf shell-integration must load *after* the Tab binding so it captures `_tab_complete_smart` as `fzf_default_completion`; plugins must load autosuggestions → syntax-highlighting → history-substring-search) will silently break the shell if violated.
+`hyprland.conf` is the entry point: it `source`s Omarchy's defaults from
+`~/.local/share/omarchy/default/hypr/…` first, then the current theme, then *your*
+override files (`monitors`, `input`, `bindings`, `looknfeel`, `autostart`), then
+runtime toggles from `~/.local/state/omarchy/toggles/hypr/*.conf`. Order is
+load-bearing — your files win because they're sourced last. All `source` lines use
+absolute paths, so the whole-dir symlink resolves cleanly. The standard
+window/tiling/media/screenshot keybindings come from the Omarchy defaults;
+`bindings.conf` here only adds **app-launch** shortcuts. Companion daemons
+(`hypridle`, `hyprlock`, `hyprsunset`, `xdg-desktop-portal-hyprland`) read their
+config from this dir too. Full detail: `hypr/README.md`.
 
-Notable mechanics:
-- `_os` (`macos` / `linux` / `wsl`) is set at the top — every later platform branch keys off it.
-- macOS-only `_fix_pwd_case` chpwd hook canonicalizes `$PWD` to on-disk casing (APFS is case-insensitive but case-preserving). Symlinks are intentionally *not* resolved.
-- `share_history` is on; `inc_append_history` is intentionally off (they overlap and produce duplicates).
-- FZF binds containing pipes/parens **must** be single-quoted in `FZF_DEFAULT_OPTS` — fzf parses that env var like a shell command line.
-- Plugins are sourced via `_source_first` which probes Homebrew → Arch → Debian paths.
-- `zsh/REFERENCE.md` is a complete cheatsheet of every alias/function/binding.
+### Waybar (`waybar/`) — status bar
 
-### Neovim — LazyVim base + thin custom layer
+`config.jsonc` (modules + behaviour) and `style.css` (GTK CSS). `style.css` opens
+with a **relative** `@import "../omarchy/current/theme/waybar.css"` that resolves
+lexically through the symlink to the active theme — this is why `waybar/` is a
+whole-dir symlink. Custom modules shell out to `omarchy-*` helper scripts.
+`config.jsonc` is JSON-with-comments; CSS hot-reloads, structural changes need a
+bar restart. Detail: `waybar/README.md`.
 
-`nvim/init.lua` → `lua/config/lazy.lua` bootstraps `lazy.nvim` with `LazyVim/LazyVim` as the base spec and `{ import = "plugins" }` overlaying `lua/plugins/*.lua`. Don't replace LazyVim — extend it.
+### tmux (`tmux/`) — minimal, plugin-free
 
-The five enabled LazyVim *extras* (committed in `nvim/lazyvim.json`, not toggled via `:LazyExtras`):
-- `dap.core` (debugger)
-- `editor.neo-tree`
-- `lang.clangd` (clangd + codelldb + clang-format)
-- `lang.java` (jdtls + java-debug + google-java-format)
-- `lang.python` (pyright + ruff + debugpy + black)
+`tmux/tmux.conf` is a ~100-line Omarchy config: prefix `Ctrl+Space` (with `Ctrl+b`
+as `prefix2`), reload on `prefix + q`, splits `|`/`-`/`\`, prefix-free pane nav
+(`Ctrl+Alt+arrows`) and window/session switching (`Alt+…`, `P`/`N`). Theme uses
+**named** colours (`blue`, `brightblack`, `default`) not hex, so it re-themes with
+the terminal palette. **No plugins** — deliberately, so a fresh checkout works
+with zero install. (This replaced an older 548-line plugin-heavy config; don't
+reintroduce TPM/plugins.) Detail: `tmux/README.md`.
 
-Custom modules (the parts to actually edit):
-- `lua/cp/runner.lua` — tmux-aware compile-and-run for C/C++/Java/Python (`<leader>r{r,c,i,o,d,D}`). Detects `$TMUX`; in tmux it `tmux split-window -h -l 45%`, otherwise `:terminal` split. Pipes `input.txt` / `in.txt` / `stdin.txt` on stdin if present. Wraps the command in `bash -lc` (not the user's `$SHELL`) because the "press any key" tail uses `read -n1` which is bash-specific.
-- `lua/plugins/cpp.lua` — C/C++ tooling: pins Mason tools (`clangd`, `clang-format`, `codelldb`), CP-friendly clang-format style (4-space indent, `IndentCaseLabels: true`, `SortIncludes: false`), and `<leader>rD` which compiles `-O0 -g3 -DLOCAL` with the bundled include path and launches codelldb via DAP. Note: codelldb's launch schema uses `stdinFile`, not `stdio`.
-- `lua/plugins/competitest.lua` — CompetiTest with port `27121` (matches Competitive Companion browser extension). Tests sit next to source as `<stem>_input<N>.txt` / `<stem>_output<N>.txt`.
-- `lua/plugins/all-themes.lua` — preloads ~20 colorschemes lazily so the Omarchy theme switcher can hot-swap.
-- `lua/plugins/omarchy-theme-hotreload.lua` — listens on the `LazyReload` user event, re-resolves the colorscheme from LazyVim opts, re-applies it, and re-sources `after/plugin/transparency.lua`. This is what lets Omarchy's external theme rewrites propagate without restarting nvim.
-- `lua/config/autocmds.lua` — `BufNewFile` autocmds insert CP boilerplate from `templates/`. Java template substitutes both `$(JAVA_TASK_CLASS)` and `$(FNOEXT)` so the same file works for plain `:e Foo.java` and CompetiTest-spawned files.
-- `include/bits/stdc++.h` — shim for macOS clangd (Apple's libc++ doesn't ship this GCC header). The runner and competitest both pass `-I<stdpath('config')>/include`. The repo's `clangd/config.yaml` adds the same `-I` so editor diagnostics resolve. **Note:** on macOS clangd reads its user config from `~/Library/Preferences/clangd/config.yaml`, not `~/.config/clangd/`, so `bootstrap.sh` symlinks both paths to the repo file. Don't add `Compiler: g++-...` to that config — it breaks member-completion type resolution against the libc++-targeted shim (see `nvim/docs/troubleshooting.md`).
+### Neovim (`nvim/`) — LazyVim + thin custom layer
 
-The `nvim/docs/` directory is the user-facing manual — `cpp.md`, `competitive-programming.md`, `keymaps.md`, `troubleshooting.md`. Update these when changing the user-visible behavior.
+`~/.config/nvim` is a whole-dir symlink. LazyVim base + `lua/plugins/*.lua`
+overlay, tuned for competitive programming (C/C++ primary, Java, Python). It has
+its own **`nvim/CLAUDE.md`** (read it before editing nvim) and a comprehensive
+**`nvim/docs/`** manual. Theme is Omarchy-driven via a gitignored
+`lua/plugins/theme.lua` symlink + `omarchy-theme-hotreload.lua`. Lua style: stylua,
+2-space indent (`nvim/stylua.toml`). Don't replace LazyVim — extend it.
 
-### tmux — prefix `Ctrl+Space`, TPM-managed plugins
+### Alacritty (`alacritty/`) — secondary terminal
 
-`tmux/tmux.conf` self-bootstraps: on first run it clones TPM and installs all declared plugins. Notable:
-- Prefix is `Ctrl+Space` (not `Ctrl+B`). This **collides with zsh's default `autosuggest-accept`**, so zsh rebinds that to `^F`. Don't reintroduce a `^Space` binding without that compensation.
-- `Ctrl+h/j/k/l` (no prefix) navigates between tmux panes *and* nvim splits via `christoomey/vim-tmux-navigator`. The plugin's `prefix + Ctrl+l` rebind is explicitly cleared (`@vim_navigator_prefix_mapping_clear_screen ''`) so the user's "send C-l + clear scrollback" binding wins.
-- `tmux-resurrect` captures pane contents — passwords typed at a prompt end up on disk under `~/.local/share/tmux/resurrect/`. Documented at the top of the resurrect block.
-- `set -g @plugin '...'` lines are read by TPM at startup; a fresh checkout needs `prefix + I` once.
-- Plugin checkouts (`tmux/plugins/`) are gitignored.
+`alacritty.toml` imports the Omarchy theme (`general.import`), sets the Nerd Font,
+OSC-52 clipboard, `Shift/Ctrl+Insert` copy-paste and a `Shift+Return` → `\r`
+escape. Live-reloads on save. Detail: `alacritty/README.md`.
 
-### Ghostty — macOS-native terminal, "defensive locks" pattern
+### Starship (`starship/`) — prompt
 
-`ghostty/config` holds **only customizations** — settings matching upstream defaults are absent, with two exceptions kept explicit on purpose: the **clipboard block** (`clipboard-read = ask`, etc.) and the **macOS security block** (`macos-auto-secure-input`, `macos-secure-input-indication`). These are pinned even though they currently equal defaults — so a future upstream loosening can't slip through silently. Don't strip them as redundant.
+Deliberately minimal: `directory` + `git_branch` + `git_status` + `character`
+only. `command_timeout = 200` for snappiness; git-status compressed to Nerd Font
+glyphs. Detail: `starship/README.md`.
 
-Loads optional `~/.config/ghostty/config.local` for machine-local overrides (the `?` prefix means "no error if missing").
+### fastfetch (`fastfetch/`) — system info
 
-### Starship — two-line prompt, runtimes on right
+`config.jsonc`: Arch logo + three box-drawn panels (Hardware / Software /
+Age·Uptime·Update). Mixes built-in probes with `command` modules calling
+`omarchy-*` helpers; the "OS age" line derives install date from `stat -c %W /`.
+Detail: `fastfetch/README.md`.
 
-`starship/starship.toml` uses palette `midnight_horizon` (Tokyo Night–leaning). Layout:
-- Line 1: identity → directory → git → `$fill` → `cmd_duration`
-- Line 2: shlvl → docker/k8s/terraform/cloud → jobs → status → character
-- `right_format`: language runtimes only ($python, $nodejs, $bun, $deno, $golang, $rust, $java, $lua, $ruby, $direnv) — they render only when the project actually uses them.
+### clangd (`clangd/`) — C/C++ LSP config
 
-`directory.truncation_length = 100` + `truncate_to_repo = false` is intentional — `0` would collapse to basename (the *opposite* of "no truncation"). `command_timeout = 1500` is bumped from 500 ms because `git status` on a slow filesystem can blow past the default.
+`config.yaml` adds `-std=gnu++20 -Wall -Wextra` for loose single-file C/C++ (no
+`compile_commands.json`). On Arch, GCC ships `<bits/stdc++.h>` natively, so **no
+`-I` is needed** (unlike macOS, which needed a shim). **Don't add `Compiler:
+g++-…`** — it breaks member-completion against the libc++ shim on the macOS side.
+Note this config is **not currently symlinked** into `~/.config/clangd/`. Detail:
+`clangd/README.md`.
 
-### git, bat
+### bash (`bash/`) — login shell, reference copies
 
-- `git/.gitconfig`: delta as pager (with tokyonight theme), zdiff3 conflict style, line numbers on, side-by-side off. The user's email is the GitHub noreply form.
-- `bat/config`: just `--theme="tokyonight_night"`. The theme tmTheme lives at `bat/themes/tokyonight_night.tmTheme` — `bat cache --build` is needed after changing themes.
+`~/.bashrc` etc. are **copied** here, not symlinked. The substance lives in
+Omarchy's `~/.local/share/omarchy/default/bash/rc`, which `.bashrc` sources;
+personal config goes after that line in the *live* file. Detail: `bash/README.md`.
 
-## Cross-tool conventions
+### zsh (`zsh/`) — dormant
 
-- **Theme**: Tokyo Night Storm in tmux/nvim/starship/bat; Catppuccin Macchiato in Ghostty (intentional contrast — macOS chrome is darker than the inner panes).
-- **Font**: CaskaydiaMono Nerd Font Mono everywhere that exposes the choice (Ghostty).
-- **Editor**: `EDITOR=nvim` (with vim/vi fallback in `.zshrc`).
-- **Pager**: bat for `man`/`less`, delta for `git diff`. `delta` is **never** aliased to `diff(1)` — it's a pager, not a diff replacement.
+Single-file `~900-line .zshrc` with **load-bearing ordering invariants** (read
+`zsh/README.md` § "Ordering invariants" before reordering anything). Currently
+**not the active shell** (bash is) and **not symlinked**. `zsh/REFERENCE.md` is a
+full alias/function/binding cheatsheet. Treat as legacy unless reactivated.
 
 ## Editing conventions
 
-- **Don't add a sync/install script** unless asked. The symlink-and-edit-in-place model is intentional.
-- **Don't reformat `.zshrc` into `conf.d/` modules.** That layout was deliberately removed (the gitignore still references `*.bak.*` from that migration). The single-file load with explicit ordering is the design.
-- **Lua formatting**: 2-space indent, 120-column (see `nvim/stylua.toml`). Run `stylua nvim/` before committing nvim changes.
-- **Don't toggle LazyVim extras via `:LazyExtras`** — it persists locally but doesn't reach this repo. Edit `nvim/lazyvim.json`'s `"extras"` array directly.
-- **Backups**: timestamped backups (`*.bak.<unix-ts>`) are gitignored — the audit/refactor workflows leave them behind. Clean up after yourself before committing.
+- **Live config is priority.** If repo and live diverge, copy live → repo.
+- **Don't edit Omarchy's managed files** (`~/.local/share/omarchy/`,
+  `~/.config/omarchy/`) — override in these repo files instead.
+- **Update the per-tool `README.md`** whenever you change that tool's config.
+- **Don't add a `bootstrap.sh`/installer** unless asked — the symlink model is
+  manual and intentional for now.
+- **Lua**: stylua, 2-space indent, 120-col (`nvim/stylua.toml`). Run `stylua nvim/`
+  before committing nvim changes. Follow `nvim/CLAUDE.md` for nvim work.
+- **tmux**: keep it plugin-free; don't reintroduce TPM.
+- **Backups**: `*.backup-<UTC-ts>` / `*.bak.*` are gitignored — clean up before
+  committing.
 
 ## Reference files worth reading first
 
-- `zsh/README.md` — ordering invariants and design rationale (the *why* behind the .zshrc sequence).
-- `zsh/REFERENCE.md` — every alias / function / keybinding.
-- `nvim/docs/README.md` — index into the per-topic nvim manuals.
-- `tmux/TMUX-GUIDE.md` — long-form walkthrough; `tmux/docs/README.md` is the binding cheatsheet.
-- `starship/README.md` — module-by-module explanation of the prompt.
-- `alacritty/README.md` — Alacritty config walkthrough + cross-platform notes.
-- `dev-tools.md` — inventory of Homebrew/mise-managed tools the configs assume.
+- Top-level `README.md` — index of every tool + its doc.
+- Each tool's `README.md` — line-by-line config explanation + validation.
+- `nvim/CLAUDE.md` and `nvim/docs/README.md` — the nvim manual.
+- `zsh/README.md` — zsh ordering invariants (if you touch the dormant zsh config).

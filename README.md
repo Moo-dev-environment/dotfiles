@@ -1,83 +1,74 @@
 # dotfiles
 
-Personal cross-platform dotfiles for macOS and Linux. One repo drives both
-machines; OS-specific bits live in per-OS overlay files so neither machine
-carries dead settings the other will warn about.
+Personal dotfiles for **Omarchy** (Arch Linux + Hyprland). Each tool lives in its
+own directory here and is **symlinked into place** under `~` / `~/.config`, so
+editing a file in this repo edits the live config directly (no copy/sync step).
 
-Tools managed: **Ghostty**, **Alacritty**, **tmux**, **zsh**, **starship**, **git**.
-Neovim has its own `nvim/` directory in this repo but is not touched by the
-bootstrap script — manage it with `lazy.nvim` directly.
+Every tool directory has a **`README.md` that documents the config line by line**
+— what each setting does, how to use the tool, and how to validate changes. Start
+there for any tool you want to understand.
 
-```
-~/GITHUB/dotfiles/
-├── bootstrap.sh        # OS-aware idempotent linker (also runs chsh)
-├── README.md           # this file
-├── docs/
-│   ├── SETUP.md            # first-time install for macOS + Linux
-│   ├── ARCHITECTURE.md     # how OS detection / overlays work
-│   ├── CONFIGS.md          # per-tool reference
-│   ├── CUSTOMIZATION.md    # local overrides, adding new tools
-│   └── TROUBLESHOOTING.md  # known issues + fixes
-│
-├── ghostty/
-│   ├── config.shared       # portable, imported by both overlays
-│   ├── config.macos        # macOS overlay (Catppuccin Macchiato + macOS keys)
-│   └── config.linux        # Linux overlay (omarchy dynamic theme + GTK)
-│
-├── alacritty/
-│   ├── shared.toml         # portable base
-│   ├── macos.toml          # macOS overlay (Catppuccin import)
-│   └── linux.toml          # Linux overlay (omarchy import)
-│
-├── tmux/
-│   ├── tmux.conf
-│   └── TMUX-GUIDE.md       # cheatsheet
-│
-├── zsh/
-│   ├── .zshrc              # modular loader (sources conf.d/*.zsh)
-│   ├── .zprofile           # login-shell setup
-│   ├── conf.d/             # 01-environment.zsh ... 10-tools.zsh
-│   └── REFERENCE.md        # alias/function/keybind cheatsheet
-│
-├── starship/starship.toml
-├── git/.gitconfig
-└── nvim/                   # untouched by bootstrap.sh
-```
+## Tools & their docs
 
-## Quickstart
+| Tool | What it is | Docs | Live → repo link |
+|---|---|---|---|
+| **Hyprland** | Wayland compositor (the desktop itself) | [`hypr/README.md`](hypr/README.md) | `~/.config/hypr` → `hypr/` |
+| **Waybar** | Top status bar | [`waybar/README.md`](waybar/README.md) | `~/.config/waybar` → `waybar/` |
+| **tmux** | Terminal multiplexer (panes/sessions) | [`tmux/README.md`](tmux/README.md) | `~/.config/tmux/tmux.conf` → `tmux/tmux.conf` |
+| **Neovim** | Editor (LazyVim + CP workflow) | [`nvim/README.md`](nvim/README.md) · [`nvim/docs/`](nvim/docs/README.md) | `~/.config/nvim` → `nvim/` |
+| **bash** | Login shell (the active one) | [`bash/README.md`](bash/README.md) | **copy only** — not symlinked |
+| **Alacritty** | GPU terminal emulator | [`alacritty/README.md`](alacritty/README.md) | `~/.config/alacritty` → `alacritty/` |
+| **Starship** | Shell prompt | [`starship/README.md`](starship/README.md) | `~/.config/starship.toml` → `starship/starship.toml` |
+| **Fastfetch** | System-info screenshot tool | [`fastfetch/README.md`](fastfetch/README.md) | `~/.config/fastfetch` → `fastfetch/` |
+| **clangd** | C/C++ language server config | [`clangd/README.md`](clangd/README.md) | **not deployed** — `~/.config/clangd/` is absent |
+| **zsh** | Shell config (dormant) | [`zsh/README.md`](zsh/README.md) · [`zsh/REFERENCE.md`](zsh/REFERENCE.md) | not symlinked — legacy, bash is the login shell |
+
+> **Not everything is symlinked.** **bash** files (`~/.bashrc`, …) are **copied**
+> here for reference, not linked — editing `bash/` doesn't change the live shell.
+> **zsh** is **dormant** (bash is the login shell) and not linked. **clangd**'s
+> config lives in the repo but isn't currently symlinked into `~/.config/clangd/`.
+> See each tool's README for specifics.
+
+## How the symlink model works
+
+Most tools are symlinked **whole-directory** (`~/.config/<tool>` → `<tool>/`),
+except single-file configs (tmux, starship, clangd) which are symlinked file →
+file. Each tool's README has the exact link and a **validate-after-editing**
+section. To re-create a link manually:
 
 ```sh
-git clone git@github.com:smmmsmo/dotfiles.git ~/GITHUB/dotfiles
-bash ~/GITHUB/dotfiles/bootstrap.sh
+# whole-dir tool (e.g. hypr):
+mv ~/.config/hypr ~/.config/hypr.backup-$(date -u +%Y%m%dT%H%M%SZ)
+ln -s ~/GITHUB/dotfiles/hypr ~/.config/hypr
+
+# single-file tool (e.g. tmux):
+ln -sf ~/GITHUB/dotfiles/tmux/tmux.conf ~/.config/tmux/tmux.conf
 ```
 
-That's it. The script:
-1. Detects OS via `uname -s`.
-2. For each managed config: backs up any existing real file to
-   `<path>.backup-<UTC timestamp>`, then creates an absolute-path symlink
-   into the repo.
-3. Runs `chsh -s "$(command -v zsh)"` if zsh isn't already the login shell.
+Backups of replaced files/dirs are parked next to the original as
+`*.backup-<UTC-timestamp>` and are **not** committed.
 
-Re-run any time — already-correct links are skipped.
+## Theme integration
 
-## Symlink table
+Several tools (Alacritty, Waybar, Hyprland, Neovim, fastfetch) don't hardcode
+colours — they **import the active Omarchy theme** from
+`~/.config/omarchy/current/theme/…`. Switching themes in Omarchy rewrites those
+files and the tools restyle automatically. This is why whole-directory symlinks
+matter (relative imports must keep resolving). Each tool's README notes its theme
+hook.
 
-| Live path                              | Source in repo            |
-| -------------------------------------- | ------------------------- |
-| `~/.zshrc`                             | `zsh/.zshrc`              |
-| `~/.zprofile`                          | `zsh/.zprofile`           |
-| `~/.gitconfig`                         | `git/.gitconfig`          |
-| `~/.config/starship.toml`              | `starship/starship.toml`  |
-| `~/.config/tmux/tmux.conf`             | `tmux/tmux.conf`          |
-| `~/.config/ghostty/config`             | `ghostty/config.<os>`     |
-| `~/.config/alacritty/alacritty.toml`   | `alacritty/<os>.toml`     |
+## Repo conventions
 
-`<os>` is `macos` or `linux`.
+- **Don't edit Omarchy's defaults** under `~/.local/share/omarchy/` or
+  `~/.config/omarchy/` — they're replaced on update. Override in *these* files.
+- **Live config is the priority.** This repo tracks what's actually running on the
+  machine; if they ever diverge, the live config wins and gets copied back.
+- Per-tool READMEs are the source of truth. The older top-level `docs/` notes
+  (`ARCHITECTURE.md`, `CONFIGS.md`, …) predate the Omarchy migration and may be
+  out of date.
 
-## Where to read next
+---
 
-- New machine? → [`docs/SETUP.md`](docs/SETUP.md)
-- Want to understand the layout? → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- Adding a new tool / customizing? → [`docs/CUSTOMIZATION.md`](docs/CUSTOMIZATION.md)
-- Something broken? → [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
-- Per-tool reference → [`docs/CONFIGS.md`](docs/CONFIGS.md)
+> **Note:** there is currently **no `bootstrap.sh`** in this repo — the symlinks
+> above were created by hand and are documented per-tool. A clean-checkout
+> installer would need to be (re)written to reproduce them automatically.

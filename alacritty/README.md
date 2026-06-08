@@ -1,225 +1,157 @@
 # Alacritty
 
-Cross-platform (macOS + Linux) GPU-accelerated terminal. The config lives at
-`~/.config/alacritty/alacritty.toml` (whole `~/.config/alacritty` directory is
-symlinked from `alacritty/` in this repo). The colour palette is split into
-its own file under `themes/` and pulled in by `[general] import`.
+**Alacritty** is a fast, GPU-accelerated terminal emulator. It's deliberately
+minimal — no tabs, no splits, no built-in multiplexing (that's tmux's job). It
+just draws a terminal grid very quickly. Configuration is a single TOML file.
 
-`live_config_reload = true` is on, so saving the file applies it — no
-restart, no key combo.
+- **Live path:** `~/.config/alacritty` → symlink → `alacritty/` (this dir)
+- **Editing `alacritty.toml` here edits the live config.** Alacritty **watches
+  the file and reloads on save** — no restart needed.
+- On Omarchy this is a *secondary* terminal (Ghostty is the daily driver), but
+  it's fully configured and theme-synced.
 
-## Files
+## How it fits together
 
-```
-alacritty/
-├── alacritty.toml                     main config
-└── themes/
-    └── tokyonight_storm.toml          palette only — imported by alacritty.toml
-```
+Alacritty has no theme of its own here — it **imports** the colours from
+Omarchy's current theme. When you switch themes in Omarchy, the imported file is
+rewritten and Alacritty live-reloads into the new palette automatically. Your
+personal settings (font, padding, keybinds) live in this file and are never
+touched by the theme switch.
 
-## Authoritative reference
+---
 
-```sh
-# Print the schema with annotations (a JSON man-page)
-alacritty --print-events                       # tail input events for binding debug
-alacritty migrate                              # validate / migrate config to current schema
-man 5 alacritty                                # full reference for every option
-man 5 alacritty-bindings                       # key/mouse bindings reference
-```
+## Line-by-line configuration
 
-The official option reference (in case you'd rather read on the web):
-<https://alacritty.org/config-alacritty.html>.
-
-## What this config customizes
-
-The file holds **only customizations** — settings that match Alacritty's
-defaults are intentionally absent. Two clusters exist for cross-platform
-reasons; see "Cross-platform handling" below.
-
-| Block         | What it does |
-|---------------|---------------|
-| Theme         | Tokyo Night Storm via `[general] import` of `themes/tokyonight_storm.toml`. Matches the in-pane theme used by nvim, tmux, starship, and bat. |
-| Typography    | `CaskaydiaMono Nerd Font Mono` 15 pt. Built-in box-drawing on. `[font.offset] y = 2` adds a few px of cell height (mirrors Ghostty's `adjust-cell-height = 5%`). |
-| Window        | 96 % opacity + blur (macOS). 140 × 38 default size, 10 × 8 padding, dynamic title on. `decorations = "Full"` cross-platform; override per-machine on Hyprland. |
-| Scrollback    | 50 000 lines, mouse-wheel multiplier `3`. |
-| Cursor        | Solid block, non-blinking. Hollow when window is unfocused. Thickness `0.15`. |
-| Selection     | `save_to_clipboard = true` (selection → system clipboard). Curated `semantic_escape_chars` so word-double-click stops at typical token boundaries. |
-| Mouse         | Hide pointer while typing. |
-| Bell          | `EaseOutExpo` animation, `duration = 0` — flashes silently if anything fires the bell. |
-| macOS         | `option_as_alt = "OnlyLeft"` matches Ghostty's `macos-option-as-alt = left`. Right-Option keeps its OS-level diacritic behaviour. |
-
-## Notable non-default choices
-
-- **`live_config_reload = true`** — Alacritty re-reads the file on save.
-  Default is also `true` since 0.13, but this is kept explicit so a future
-  default flip doesn't surprise you.
-- **`save_to_clipboard = true`** — Alacritty's default copies *only* to the
-  selection clipboard (PRIMARY on Linux), which is invisible on macOS. With
-  this on, a mouse selection lands in the regular system clipboard too.
-- **`semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"`** — adds the box-drawing
-  vertical bar `│` on top of the default set. Useful when double-clicking
-  inside tmux or `ls -l` output.
-- **`option_as_alt = "OnlyLeft"`** (macOS) — Left-Option behaves as Alt
-  (vim/zsh/tmux all want this). Right-Option keeps the OS diacritic flow
-  (`⌥e e` → `é`).
-
-## Keybinds
-
-`Command` = Cmd on macOS, Super on Linux (Alacritty aliases them). Listed
-bindings are the **additions** in this config; Alacritty has its own
-defaults too — run `man 5 alacritty-bindings` for the full default set.
-
-Splits and tabs are intentionally **absent**: use tmux for that.
-
-### Font size
-
-| Keys                           | Action              |
-|--------------------------------|---------------------|
-| `super+=` / `ctrl+shift+=`     | Increase font size  |
-| `super+-` / `ctrl+shift+-`     | Decrease font size  |
-| `super+0` / `ctrl+shift+0`     | Reset font size     |
-
-### Window / clipboard
-
-| Keys                           | Action            |
-|--------------------------------|-------------------|
-| `super+n` / `ctrl+shift+n`     | New window        |
-| `super+c`                      | Copy (macOS)      |
-| `super+v`                      | Paste (macOS)     |
-| `ctrl+shift+c` / `ctrl+shift+v` | Copy / paste (Linux — Alacritty default) |
-| `super+k` / `ctrl+shift+k`     | Clear scrollback (visible region: use shell Ctrl-L or `clear`) |
-
-### Defaults you might also want to know
-
-| Keys                           | Action                     | Source  |
-|--------------------------------|----------------------------|---------|
-| `ctrl+shift+space`             | Toggle Vi mode             | default |
-| `ctrl+shift+f`                 | Search forward             | default |
-| `ctrl+shift+b`                 | Search backward            | default |
-| `ctrl+shift+pageup` / `down`   | Scroll page                | default |
-| `ctrl+shift+home` / `end`      | Scroll to top / bottom     | default |
-
-In Vi mode, `y` yanks, `/` searches, `v` selects — same as you'd expect.
-
-## Cross-platform handling
-
-Alacritty silently ignores options that aren't valid on the current
-platform, which lets one TOML file cover both:
-
-| Option                              | Honoured on | Ignored on    |
-|-------------------------------------|-------------|---------------|
-| `window.blur`                       | macOS       | Linux         |
-| `window.option_as_alt`              | macOS       | Linux         |
-| `window.decorations_theme_variant`  | Linux/Wayland | macOS       |
-
-`window.decorations` is honoured on both, but the values differ:
-
-- **macOS:** `"Full"`, `"Buttonless"`, `"Transparent"`, `"None"`.
-- **Linux:** `"Full"`, `"None"`.
-
-This config sets `"Full"`. On Hyprland you typically want `"None"` — see
-"Machine-local overrides" below for the clean way to do that.
-
-## Machine-local overrides
-
-The `[general] import` array has a commented-out second entry:
+### Theme import
 
 ```toml
-import = [
-  "~/.config/alacritty/themes/tokyonight_storm.toml",
-  # "~/.config/alacritty/config.local.toml",
-]
+general.import = [ "~/.config/omarchy/current/theme/alacritty.toml" ]
 ```
 
-To opt in:
+Pulls in the colour scheme from Omarchy's "current theme" symlink. `import` is a
+list, so you could layer more files; here it's just the theme. Settings in *this*
+file override anything the import sets, because the import is listed first and
+later keys win. This is the single line that makes Alacritty follow the system
+theme.
 
-1. Uncomment the line.
-2. Create `~/.config/alacritty/config.local.toml` with whatever you want to
-   override. **Note:** the file must exist — Alacritty has no `?`-style
-   "skip if missing" syntax (unlike Ghostty).
-
-Examples:
+### Environment
 
 ```toml
-# ~/.config/alacritty/config.local.toml — Hyprland
+[env]
+TERM = "xterm-256color"
+```
+
+Sets the `$TERM` variable that programs read to decide what escape sequences the
+terminal understands. `xterm-256color` is the safe, universally-recognised value
+(some remote hosts don't ship Alacritty's own `alacritty` terminfo, so this
+avoids "unknown terminal" errors over SSH).
+
+### Terminal
+
+```toml
+[terminal]
+osc52 = "CopyPaste"
+```
+
+`OSC 52` is an escape sequence that lets a program running in the terminal —
+including one on a **remote** machine over SSH, or inside tmux — set your local
+clipboard. `"CopyPaste"` allows both reading and writing. This is what makes
+"yank in remote nvim → paste locally" work.
+
+### Font
+
+```toml
+[font]
+normal = { family = "CaskaydiaMono Nerd Font Mono" }
+bold   = { family = "CaskaydiaMono Nerd Font Mono" }
+italic = { family = "CaskaydiaMono Nerd Font Mono" }
+size = 9
+```
+
+One font for all three styles: **CaskaydiaMono Nerd Font Mono** — a patched
+Cascadia Code that includes the thousands of extra "Nerd Font" glyphs (icons used
+by Starship, the file tree, statuslines, fastfetch, etc.). The `Mono` variant
+forces every glyph to a single cell width, which keeps columns aligned. `size =
+9` is the point size — small, for dense text; bump it if it's too tight.
+
+### Window
+
+```toml
 [window]
+padding.x = 14
+padding.y = 14
 decorations = "None"
 ```
 
+- `padding.x / .y = 14` — 14px of breathing room between the text grid and the
+  window edge on each axis.
+- `decorations = "None"` — no title bar / window border drawn by the terminal.
+  On a tiling Wayland compositor (Hyprland) the compositor manages window frames,
+  so the terminal's own decorations would be redundant chrome.
+
+### Keyboard
+
 ```toml
-# ~/.config/alacritty/config.local.toml — 4K external display
-[font]
-size = 17.0
+[keyboard]
+bindings = [
+  { key = "Insert", mods = "Shift",   action = "Paste" },
+  { key = "Insert", mods = "Control", action = "Copy"  },
+  { key = "Return", mods = "Shift",   chars  = "\u001B\r" }
+]
 ```
 
-Imports merge over the base config; later imports win.
+- `Shift+Insert` → **Paste**, `Ctrl+Insert` → **Copy**. These are the classic
+  X11/Linux clipboard chords, added back because they're muscle memory for many
+  people and don't clash with shell shortcuts.
+- `Shift+Return` → send the bytes `\r`, i.e. **Escape followed by Carriage
+  Return** (`Esc` + `Enter`). This is the CSI/"alt-enter" trick that lets apps
+  like nvim or a REPL distinguish *Shift+Enter* (e.g. "insert newline without
+  submitting") from a plain *Enter*. Terminals can't send Shift+Enter natively,
+  so this encodes it as a sequence the app can detect.
 
-## Theme
+### Selection
 
-`themes/tokyonight_storm.toml` is the full Tokyo Night *Storm* palette
-(`#24283b` background) — same variant used by `folke/tokyonight.nvim` and
-matched by tmux, starship, and bat in this repo. To switch palettes, drop a
-new theme file next to it and change the import line in `alacritty.toml`.
-
-The repo currently ships only the one theme; if you want more, `alacritty-themes`
-on GitHub (<https://github.com/alacritty/alacritty-theme>) has hundreds of
-ready-to-import TOMLs.
-
-## Troubleshooting
-
-### Config didn't reload
-
-`live_config_reload` is on, but it triggers on **save** of the *resolved*
-file. Editing through the symlink works (it's the same inode). If you
-edited an imported file (`themes/...`), Alacritty re-imports — but if
-something looks stuck, validate first:
-
-```sh
-alacritty migrate /Users/mo/.config/alacritty/alacritty.toml
+```toml
+[selection]
+save_to_clipboard = true   # Ghostty parity: copy-on-select = clipboard.
 ```
 
-This dry-runs the parser and reports schema errors.
+When you select text with the mouse, it's copied to the **system clipboard**
+immediately (not just the primary/middle-click buffer). The comment notes this
+mirrors how Ghostty is configured, so both terminals behave the same.
 
-### Glyphs render as tofu
+### Mouse
 
-You need a Nerd Font, both installed *and* selected. The cask
-`font-caskaydia-mono-nerd-font` provides the one this config asks for.
-Confirm with:
-
-```sh
-fc-list | grep -i caskaydia       # Linux
-ls "/Library/Fonts" "$HOME/Library/Fonts" | grep -i caskaydia  # macOS
+```toml
+[mouse]
+hide_when_typing = true
 ```
 
-### Cmd-key bindings don't fire on Linux
+Hides the mouse cursor as soon as you start typing, so it doesn't sit on top of
+the text you're reading. It reappears when you move the mouse.
 
-On Linux, `Command` aliases `Super` (the Windows / Logo key). If your
-window manager already grabs Super-N, Super-K, Super-C, etc., Alacritty
-never sees the keystroke. Either remap your WM (Hyprland's `bind = ` /
-sway's `bindsym`), or rely on the `Control|Shift` variants documented above.
+---
 
-### Right-Option types `é` instead of behaving as Alt
+## Best use cases
 
-That's intentional — `option_as_alt = "OnlyLeft"`. Use **Left-Option** for
-Alt-prefixed bindings. Flip to `option_as_alt = "Both"` in
-`config.local.toml` if you'd rather lose the diacritics.
+- **As a tmux host.** Alacritty does one thing fast; let tmux handle
+  splits/tabs/sessions on top. The two are a classic pairing.
+- **SSH / remote work.** The `xterm-256color` TERM + OSC 52 clipboard make remote
+  sessions behave well, including clipboard from the far end.
+- **A lightweight fallback** when you want a no-frills, instant terminal.
 
-### tmux thinks it's xterm-256color, not alacritty
+## Validate after editing
 
-The `alacritty` terminfo entry needs to be installed. Homebrew installs it
-automatically with the cask; on minimal Linux:
-
-```sh
-sudo tic -xe alacritty,alacritty-direct /usr/share/alacritty/alacritty.info
+```bash
+# Check for deprecated keys / migration notes (operates on a copy if you want):
+alacritty migrate --dry-run -c ~/.config/alacritty/alacritty.toml
 ```
 
-(or grab `alacritty.info` from the upstream repo). Verify with
-`infocmp alacritty | head -1`. Until that's done, tmux sees a mismatch and
-reports the wrong terminfo on session start.
+A clean run reports no changes needed. (Alacritty also live-reloads on save, so
+a syntax error simply shows up as an on-screen error overlay rather than killing
+the terminal.)
 
-### Colors look washed out inside tmux or nvim
+## Reference
 
-Their terminfo must advertise RGB. The tmux config in this repo already
-sets `terminal-features ",*:RGB"`. nvim defaults to `termguicolors` via
-LazyVim. If colors still look 256-ish, double-check no parent shell
-exported `COLORTERM=` to something other than `truecolor`.
+- Config reference (every key): `man 5 alacritty` or
+  <https://alacritty.org/config-alacritty.html>

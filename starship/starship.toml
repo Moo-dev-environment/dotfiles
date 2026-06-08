@@ -1,290 +1,32 @@
-"$schema" = "https://starship.rs/config-schema.json"
-
-add_newline = false
-command_timeout = 1500
-continuation_prompt = "[∙](fg:muted) "
-palette = "midnight_horizon"
-
-# ── Line 1: context (left) + info (right via fill) ────────────────────────────
-format = """
-[╭─](bold fg:surface2)$sudo$username$hostname$directory$git_branch$git_commit$git_state$git_status$fill$cmd_duration
-[╰─](bold fg:surface2)$shlvl$docker_context$kubernetes$terraform$aws$gcloud$jobs$status$character"""
-
-# ── Right side: language runtimes (keeps line 2 clean) ────────────────────────
-right_format = """$python$nodejs$bun$deno$golang$rust$java$lua$ruby$direnv"""
-
-# ── Palette ───────────────────────────────────────────────────────────────────
-[palettes.midnight_horizon]
-muted    = "#7f8ea3"
-surface2 = "#44506a"
-blue     = "#82aaff"
-teal     = "#86e1fc"
-green    = "#c3e88d"
-amber    = "#ffc777"
-peach    = "#ff966c"
-red      = "#ff757f"
-lavender = "#c099ff"
-
-# ── Layout helpers ────────────────────────────────────────────────────────────
-[fill]
-symbol = " "
-
-# ── Identity ──────────────────────────────────────────────────────────────────
-[username]
-show_always   = false          # only shows for root or over SSH
-style_user    = "fg:peach"
-style_root    = "bold fg:red"
-format        = "[$user]($style) "
-
-[hostname]
-ssh_only = true
-style    = "fg:peach"
-format   = "[@$hostname]($style) "
-
-[sudo]
-disabled = false
-symbol   = "󰌾 "
-style    = "bold fg:red"
-format   = "[$symbol]($style)"
-
-# ── Navigation ────────────────────────────────────────────────────────────────
-[directory]
-style              = "bold fg:blue"
-read_only          = " 󰌾"
-read_only_style    = "fg:amber"
-# truncation_length is the max number of PARENT folders shown. Setting it to 0
-# would actually collapse the path to just the basename — the OPPOSITE of what
-# we want. Use a very large value to effectively disable truncation.
-# truncate_to_repo = false stops starship from trimming everything before the git root.
-truncation_length  = 100
-truncate_to_repo   = false
-truncation_symbol  = "…/"
-home_symbol        = "~"
-format             = "[󰉋 $path]($style)[$read_only]($read_only_style) "
-# Highlight the git repo root distinctly so the project boundary is obvious.
-repo_root_style    = "bold fg:teal"
-repo_root_format   = "[󰉋 $before_root_path]($style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
-
-# [directory.substitutions]
-# Removed — these replace folder names with icons (e.g. "GITHUB" → 󰊤).
-# Plain names are easier to scan; the directory module already prefixes 󰉋
-# so you still get a folder glyph at the start of the path.
-
-# ── Git ───────────────────────────────────────────────────────────────────────
-[git_branch]
-symbol            = " "
-style             = "fg:lavender"
-format            = "[$symbol$branch]($style) "
-truncation_length = 32
-truncation_symbol = "…"
-
-[git_commit]
-# Short SHA — useful during rebases, bisects, detached HEAD states.
-# tag_disabled defaults to true; must be false for $tag/tag_symbol to render.
-commit_hash_length = 7
-style              = "fg:muted"
-format             = "[$hash$tag]($style) "
-only_detached      = true         # only show SHA in detached HEAD / rebase / bisect
-tag_disabled       = false
-tag_symbol         = " 󰓹 "
-
-[git_state]
-style  = "bold fg:peach"
-format = '([$state( $progress_current/$progress_total)]($style) )'
-
-[git_status]
-style      = "fg:amber"
-format     = "([$all_status$ahead_behind]($style) )"
-ahead      = "⇡${count} "
-behind     = "⇣${count} "
-diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
-conflicted = "~${count} "
-untracked  = "?${count} "
-modified   = "!${count} "
-staged     = "+${count} "
-renamed    = "»${count} "
-deleted    = "✘${count} "
-stashed    = "*${count} "
-up_to_date = ""
-
-# ── Timing & clock ────────────────────────────────────────────────────────────
-[cmd_duration]
-min_time         = 750
-show_milliseconds = false
-style            = "fg:muted"
-format           = "[󱎫 $duration]($style) "
-
-[time]
-# Disabled — terminal title bar / OS menu bar already show the clock.
-disabled    = true
-time_format = "%I:%M %p"
-style       = "fg:teal"
-format      = "[󰥔 $time]($style)"
-
-# ── Runtimes (right_format) ───────────────────────────────────────────────────
-[python]
-# pyenv_prefix dropped — runtime management is done via mise, not pyenv.
-symbol  = " "
-style   = "fg:green"
-format  = '[${symbol}${version}( \($virtualenv\))]($style) '
-
-[nodejs]
-symbol = " "
-style  = "fg:green"
-format = "[$symbol$version]($style) "
-
-[bun]
-symbol = "🥟 "
-style  = "fg:green"
-format = "[$symbol$version]($style) "
-
-[deno]
-symbol = " "
-style  = "fg:green"
-format = "[$symbol$version]($style) "
-
-[golang]
-symbol = " "
-style  = "fg:green"
-format = "[$symbol$version]($style) "
-
-[rust]
-symbol = " "
-style  = "fg:green"
-format = "[$symbol$version]($style) "
-
-[java]
-# Scoped to real Java projects so `java -version` doesn't run on every prompt.
-symbol          = " "
-style           = "fg:green"
-format          = "[$symbol$version]($style) "
-disabled        = false
-detect_extensions = ["java", "class", "jar", "gradle", "clj", "cljc"]
-detect_files    = ["pom.xml", "build.gradle", "build.gradle.kts", "deps.edn", "project.clj", ".java-version", "build.sbt"]
-
-[lua]
-symbol = " "
-style  = "fg:blue"
-format = "[$symbol$version]($style) "
-
-[ruby]
-symbol   = " "
-style    = "fg:green"
-format   = "[$symbol$version]($style) "
-disabled = false
-
-[package]
-# Disabled — only useful when actively publishing packages.
-disabled = true
-symbol   = "󰏗 "
-style    = "fg:amber"
-format   = "[$symbol$version]($style) "
-
-# ── Containers & orchestration ────────────────────────────────────────────────
-[docker_context]
-symbol = " "
-style  = "fg:blue"
-format = "[${symbol}${context}]($style) "
-
-[kubernetes]
-symbol   = "󱃾 "
-style    = "fg:teal"
-format   = '[${symbol}${context}( \($namespace\))]($style) '
-disabled = true
-
-[terraform]
-symbol   = "󱁢 "
-style    = "fg:lavender"
-format   = "[$symbol$workspace]($style) "
-disabled = true
-
-# ── Cloud profiles ────────────────────────────────────────────────────────────
-[aws]
-symbol   = "󰸏 "
-style    = "fg:amber"
-format   = '[$symbol($profile)(\($region\))]($style) '
-disabled = true
-
-[gcloud]
-symbol   = "󰊭 "
-style    = "fg:blue"
-format   = '[$symbol$account(@$domain)\($region\)]($style) '
-disabled = true
-
-# ── Shell state ───────────────────────────────────────────────────────────────
-[jobs]
-symbol            = "✦ "
-number_threshold  = 1
-style             = "fg:muted"
-format            = "[$symbol$number]($style) "
-
-[status]
-disabled              = false
-symbol                = "✘ "
-style                 = "bold fg:red"
-# map_symbol turns 130/137/143 into SIGINT/SIGKILL/SIGTERM — far more readable.
-# pipestatus surfaces which command in a pipe failed instead of just the last one.
-map_symbol            = true
-recognize_signal_code = true
-pipestatus            = true
-format                = "[$symbol$common_meaning$signal_name$maybe_int]($style) "
-pipestatus_format     = "[$pipestatus] => [$symbol$common_meaning$signal_name$maybe_int]($style) "
-pipestatus_segment_format = "[$status]($style)"
-pipestatus_separator  = "[|](fg:muted)"
-
-[shlvl]
-# Disabled — every prompt inside tmux is SHLVL=2, so this just adds a
-# permanent "❯ 2" before the real prompt character. If you ever want it
-# back for genuinely nested shells, set disabled = false and threshold = 3
-# (so it only fires when you're shell-in-shell-in-tmux, not shell-in-tmux).
-disabled  = true
-threshold = 3
-symbol    = "❯ "
-style     = "fg:muted"
-format    = "[$symbol$shlvl]($style) "
-repeat    = false
-
-# ── Environment ───────────────────────────────────────────────────────────────
-[direnv]
-disabled = false
-symbol   = "󰇙 "
-style    = "fg:amber"
-format   = "[$symbol$loaded/$allowed]($style) "
-
-[os]
-# Disabled — local work is always macOS, and $hostname covers SSH context.
-disabled = true
-style    = "fg:muted"
-format   = "[$symbol]($style) "
-[os.symbols]
-Macos   = " "
-Linux   = " "
-Arch    = " "
-Ubuntu  = " "
-Debian  = " "
-Fedora  = " "
-
-[battery]
-# Not rendered — removed from right_format because the macOS menu bar
-# already shows battery state. Config kept for easy re-enable.
-full_symbol        = "󰁹 "
-charging_symbol    = "󰂄 "
-discharging_symbol = "󰂃 "
-unknown_symbol     = "󰂑 "
-empty_symbol       = "󰂎 "
-format             = "[$symbol$percentage]($style) "
-[[battery.display]]
-threshold          = 20
-style              = "bold fg:red"
-[[battery.display]]
-threshold          = 50
-style              = "fg:amber"
-discharging_symbol = "󰁾 "
+add_newline = true
+command_timeout = 200
+format = "[$directory$git_branch$git_status]($style)$character"
 
 [character]
-success_symbol            = "[❯](bold fg:green)"
-error_symbol              = "[❯](bold fg:red)"
-vimcmd_symbol             = "[❮](bold fg:amber)"
-vimcmd_replace_one_symbol = "[❮](bold fg:amber)"
-vimcmd_replace_symbol     = "[❮](bold fg:peach)"
-vimcmd_visual_symbol      = "[❮](bold fg:lavender)"
+error_symbol = "[✗](bold cyan)"
+success_symbol = "[❯](bold cyan)"
+
+[directory]
+truncation_length = 2
+truncation_symbol = "…/"
+repo_root_style = "bold cyan"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+format = "[$branch]($style) "
+style = "italic cyan"
+
+[git_status]
+format     = '[$all_status]($style)'
+style      = "cyan"
+ahead      = "⇡${count} "
+diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
+behind     = "⇣${count} "
+conflicted = " "
+up_to_date = " "
+untracked  = "? "
+modified   = " "
+stashed    = ""
+staged     = ""
+renamed    = ""
+deleted    = ""
