@@ -26,13 +26,12 @@ clipboard-write    = allow
 copy-on-select     = clipboard
 right-click-action = copy-or-paste
 
-window-width             = 140
-window-height            = 38
+# Window — always open maximized; never resurrect last-quit geometry
+maximize                 = true
+window-save-state        = never
 window-padding-x         = 10
 window-padding-y         = 8
 window-padding-balance   = true
-window-step-resize       = true
-window-save-state        = always
 window-colorspace        = display-p3
 resize-overlay-duration  = 1s
 confirm-close-surface    = false
@@ -86,6 +85,13 @@ keybind = super+equal=increase_font_size:1
 keybind = super+minus=decrease_font_size:1
 
 keybind = super+k=clear_screen
+
+# tmux passthrough — Ghostty ships emacs-style word-jump on Option+Left/Right
+# (alt+left=esc:b / alt+right=esc:f) which swallows the keys before tmux sees
+# them. Unbind so omarchy's Alt+Left/Right window navigation reaches tmux.
+# Trade-off: no Option+Left/Right word-jump in a plain (non-tmux) shell.
+keybind = alt+left=unbind
+keybind = alt+right=unbind
 
 # Machine-local overrides (optional, ? prefix = no error if missing)
 config-file = ?config.local

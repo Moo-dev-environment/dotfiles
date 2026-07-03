@@ -90,22 +90,32 @@ immediately; right-click copies if there's a selection, otherwise pastes.
 ### Window
 
 ```ini
-window-width             = 140
-window-height            = 38
+maximize                 = true
+window-save-state        = never
 window-padding-x         = 10
 window-padding-y         = 8
 window-padding-balance   = true
-window-step-resize       = true
-window-save-state        = always
 window-colorspace        = display-p3
 resize-overlay-duration  = 1s
 confirm-close-surface    = false
 ```
 
-- `140×38` cells initial size; padding balanced so leftover pixels split evenly
-  around the grid instead of piling up on one edge.
-- `window-step-resize` — window resizes snap to cell increments.
-- `window-save-state = always` — reopen windows/tabs/splits after quitting.
+- `maximize = true` — every new window opens **maximized**: a normal zoomed
+  window, *not* macOS native fullscreen (that's the separate `fullscreen`
+  option, left at its default `false`, so no extra Space is created).
+- `window-save-state = never` — never restore last-quit geometry/tabs/splits.
+  The pair above is what guarantees a full-size window on every launch.
+
+> **History:** this block used to set `window-width/height = 140×38` with
+> `window-save-state = always`. That combination resurrected whatever
+> position/size the window was last left in (minimized, dragged to a corner…)
+> and otherwise opened a fixed smaller window that macOS parked top-left.
+> `window-step-resize` (cell-snapped resizing) was dropped at the same time —
+> with a maximized-by-default window it was dead config, and resizing is now
+> smooth pixel increments.
+
+- Padding balanced so leftover pixels split evenly around the grid instead of
+  piling up on one edge.
 - `display-p3` — use the full wide-gamut display instead of clamping to sRGB.
 - `confirm-close-surface = false` — no "process is running" nag on close.
 
@@ -144,6 +154,12 @@ Left ⌥ acts as Alt (right ⌥ still types symbols); Secure Keyboard Entry
 auto-enables at password prompts (with a visual indicator); fullscreen is the
 fast non-native kind but keeps the menu bar visible.
 
+> **macOS grabs `Ctrl+Space`.** Not set in this file, but it bites terminal
+> users: macOS binds `⌃Space` to *Select the previous input source* at the
+> WindowServer level, so it never reaches Ghostty (or tmux, whose default prefix
+> is `Ctrl+Space`). Disable it in **System Settings → Keyboard → Keyboard
+> Shortcuts → Input Sources**. See `tmux/README.md` for the full story.
+
 ### Keybinds
 
 All bindings are **pinned Ghostty defaults** — kept explicit so a future
@@ -152,6 +168,19 @@ clipboard block). Groups: quick terminal / reload / open-config, splits
 (`super+d`, `super+shift+hjkl` vim-style navigation, `super+shift+z` zoom),
 tabs (`super+1..9`, `super+shift+[`/`]`), font size (`super+=`/`-`), and
 `super+k` clear. Run `ghostty +list-keybinds` for the full effective set.
+
+Two bindings are **removed**, not added, for tmux's sake:
+
+```ini
+keybind = alt+left=unbind
+keybind = alt+right=unbind
+```
+
+Ghostty ships an emacs-style word-jump on `Option+Left/Right`
+(`alt+left=esc:b` / `alt+right=esc:f`) that consumes those keys before the TTY
+forwards them — so tmux's omarchy `Alt+Left`/`Alt+Right` window navigation never
+fires. Unbinding lets the raw `M-Left`/`M-Right` reach tmux. Trade-off: no
+word-by-word cursor motion via `Option+Arrow` in a plain (non-tmux) shell.
 
 ### Local overrides
 
