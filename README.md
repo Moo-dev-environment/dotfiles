@@ -27,9 +27,16 @@ there for any tool you want to understand.
 > here for reference, not linked — editing `bash/` doesn't change the live shell
 > on the Omarchy box. **zsh** is the primary shell on macOS and IS symlinked
 > there (it merges the old single-file zsh config with the Omarchy bash gems —
-> see `zsh/README.md`). **clangd**'s config lives in the repo but isn't
-> currently symlinked into `~/.config/clangd/`. See each tool's README for
-> specifics.
+> see `zsh/README.md`). See each tool's README for specifics.
+>
+> **On the macOS machine** (Ghostty terminal; no Omarchy), the portable configs
+> are live-symlinked: **zsh** (`~/.zshrc`, `~/.zprofile`), **tmux**
+> (`~/.config/tmux/tmux.conf`), **nvim** (`~/.config/nvim`), **starship**
+> (`~/.config/starship.toml`), and **clangd** (both `~/.config/clangd/config.yaml`
+> and `~/Library/Preferences/clangd/config.yaml`). **fastfetch** and
+> **alacritty** are *not* linked there — their configs shell out to `omarchy-*`
+> helpers / theme imports that only exist on the Arch box. Ghostty's config is
+> native on macOS and not tracked here.
 
 ## How the symlink model works
 
