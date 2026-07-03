@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal **Omarchy** (Arch Linux + Hyprland) dotfiles for **Hyprland, Waybar,
 tmux, Neovim, Alacritty, Starship, fastfetch, clangd** (plus dormant **zsh** and
-reference-only **bash** configs). Each tool lives in its own top-level directory
+reference-only **bash** configs, and **Ghostty** — the terminal on the macOS
+machine). Each tool lives in its own top-level directory
 and is **symlinked into `$HOME` / `$XDG_CONFIG_HOME`**, so editing a file in this
 repo edits the live config directly — no copy/sync step.
 
@@ -28,6 +29,7 @@ config wins and gets copied back into the repo.
 | `~/.bashrc`, `~/.bash_profile`, `~/.profile`, `~/.bash_logout` | `bash/` | **copy only — NOT symlinked** |
 | `~/.zshrc`, `~/.zprofile` | `zsh/` | **not symlinked; zsh is dormant** (login shell is **bash**) |
 | `~/.config/clangd/config.yaml` | `clangd/config.yaml` | **not deployed** (`~/.config/clangd/` is absent) |
+| `~/.config/ghostty` | `ghostty/` | symlink (whole dir) — **macOS machine only** |
 
 Things to know:
 - **bash is the login shell**, and its files are copied here for reference, not
@@ -61,7 +63,7 @@ how to use the tool, and a *validate-after-editing* section. **When you change a
 config, update that tool's README.** Index: top-level `README.md`.
 
 - `hypr/README.md` · `waybar/README.md` · `tmux/README.md` · `starship/README.md`
-- `alacritty/README.md` · `fastfetch/README.md` · `clangd/README.md` · `bash/README.md`
+- `alacritty/README.md` · `fastfetch/README.md` · `clangd/README.md` · `bash/README.md` · `ghostty/README.md`
 - `nvim/README.md` + `nvim/docs/` (and `nvim/CLAUDE.md` for nvim-specific guidance)
 - `zsh/README.md` + `zsh/REFERENCE.md`
 
@@ -85,6 +87,7 @@ Validate a change before declaring it safe (most don't disturb running instances
 | fastfetch | `fastfetch -c ~/.config/fastfetch/config.jsonc --logo none >/dev/null && echo OK` |
 | Neovim | `nvim --headless "+Lazy! sync" +qa` (plugins) / `nvim --headless "+checkhealth" +qa` |
 | bash | `bash -n ~/.bashrc && echo OK` (syntax) / `bash -ic ':'` (interactive load) |
+| Ghostty | `ghostty +validate-config` (exit 0 = clean); reload with `super+shift+r` (macOS) |
 
 When inspecting a tool, read from the repo path (these files), not `~/.config/…` —
 same file via symlink, but the repo path is canonical.

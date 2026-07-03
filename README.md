@@ -18,6 +18,7 @@ there for any tool you want to understand.
 | **Neovim** | Editor (LazyVim + CP workflow) | [`nvim/README.md`](nvim/README.md) · [`nvim/docs/`](nvim/docs/README.md) | `~/.config/nvim` → `nvim/` |
 | **bash** | Login shell on the Omarchy box | [`bash/README.md`](bash/README.md) | **copy only** — not symlinked |
 | **Alacritty** | GPU terminal emulator | [`alacritty/README.md`](alacritty/README.md) | `~/.config/alacritty` → `alacritty/` |
+| **Ghostty** | Terminal emulator (primary on macOS) | [`ghostty/README.md`](ghostty/README.md) | `~/.config/ghostty` → `ghostty/` (macOS) |
 | **Starship** | Shell prompt | [`starship/README.md`](starship/README.md) | `~/.config/starship.toml` → `starship/starship.toml` |
 | **Fastfetch** | System-info screenshot tool | [`fastfetch/README.md`](fastfetch/README.md) | `~/.config/fastfetch` → `fastfetch/` |
 | **clangd** | C/C++ language server config | [`clangd/README.md`](clangd/README.md) | **not deployed** — `~/.config/clangd/` is absent |
@@ -33,10 +34,10 @@ there for any tool you want to understand.
 > are live-symlinked: **zsh** (`~/.zshrc`, `~/.zprofile`), **tmux**
 > (`~/.config/tmux/tmux.conf`), **nvim** (`~/.config/nvim`), **starship**
 > (`~/.config/starship.toml`), and **clangd** (both `~/.config/clangd/config.yaml`
-> and `~/Library/Preferences/clangd/config.yaml`). **fastfetch** and
+> and `~/Library/Preferences/clangd/config.yaml`), and **Ghostty**
+> (`~/.config/ghostty` → `ghostty/`, the macOS terminal). **fastfetch** and
 > **alacritty** are *not* linked there — their configs shell out to `omarchy-*`
-> helpers / theme imports that only exist on the Arch box. Ghostty's config is
-> native on macOS and not tracked here.
+> helpers / theme imports that only exist on the Arch box.
 
 ## How the symlink model works
 
