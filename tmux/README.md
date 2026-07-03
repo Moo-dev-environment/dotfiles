@@ -31,6 +31,7 @@ release*, then press the command key. Here the prefix is **`Ctrl+Space`** (with
 |---|---|
 | Start tmux | type `tmux` (new session) or `tmux attach` (reattach) |
 | Split right / down | `prefix + \|` / `prefix + -` |
+| Split (prefix-free) | `Alt+Enter` = top/bottom · `Alt+Shift+Enter` = side/side |
 | Move between panes | `Ctrl+Alt+←/↑/↓/→` (no prefix needed) |
 | Resize a pane | `Ctrl+Alt+Shift+arrow` |
 | New window (tab) | `prefix + c` |
@@ -38,12 +39,23 @@ release*, then press the command key. Here the prefix is **`Ctrl+Space`** (with
 | Jump to window N | `Alt+1` … `Alt+9` |
 | New / next / prev session | `prefix + C` / `N` / `P` |
 | Detach (leave it running) | `prefix + d` |
+| Close a pane | `Alt+Esc` (prefix-free) or `prefix + x` |
 | Reload this config | `prefix + q` |
+| Show all keybindings | `prefix + ?` (popup cheatsheet) |
 | Copy mode (scroll/select) | `prefix + [`, then `v` to select, `y` to copy, `q` to exit |
 
 > **Heads-up — prefix collision with zsh.** `Ctrl+Space` is also zsh's default
 > *autosuggest-accept*. The zsh config rebinds that to `Ctrl+f` so the two don't
 > fight. If you ever change the prefix, keep that in mind.
+>
+> **Heads-up — macOS steals `Ctrl+Space`.** On macOS, `⌃Space` is the system
+> shortcut *Select the previous input source*, handled by the WindowServer
+> *before* any app — so the prefix silently does nothing until you turn it off in
+> **System Settings → Keyboard → Keyboard Shortcuts → Input Sources** (uncheck
+> "Select the previous input source", and the `⌃⌥Space` "next" one). No terminal
+> or tmux setting can win this fight; it has to be disabled at the OS level. The
+> prefix-free pane keys (`Alt+Enter`, `Alt+Shift+Enter`, `Alt+Esc`) work
+> regardless of the prefix.
 
 ---
 
@@ -61,16 +73,23 @@ bind C-Space send-prefix     # press prefix twice → send a literal Ctrl+Space 
 tmux *inside* tmux (e.g. over SSH): the inner tmux needs a way to receive the
 prefix keystroke.
 
-### Reload
+### Config and help
 
 ```tmux
 bind q source-file ~/.config/tmux/tmux.conf \; display "Configuration reloaded"
+bind ? display-popup -E -w 80% -h 70% -T "Tmux keybindings" "tmux list-keys | less -R"
 ```
 
 `bind q` makes `prefix + q` re-read this file (`source-file`) and flash a
 confirmation in the status line (`display`). The `\;` separates two tmux
 commands on one line. (This rebinds `q`, which by default cancels copy-mode —
 but copy-mode `q` still works because that's a *mode-specific* binding.)
+
+`bind ?` opens a scrollable cheatsheet of every active binding using the
+built-in `tmux list-keys` inside a `display-popup` (`-E` closes the popup when
+the pager exits). Omarchy's own `prefix + ?` shells out to
+`omarchy-menu-tmux-keybindings`, which isn't installed on macOS —
+`tmux list-keys` is the zero-dependency equivalent that always works.
 
 ### Copy mode (vi-style)
 
@@ -90,6 +109,10 @@ this key while inside copy mode".
 ```tmux
 unbind '"'                                            # drop the default '"' = split-horizontal
 unbind %                                              # drop the default '%' = split-vertical
+# Prefix-free splits/kill (ported from omarchy dev) — no prefix needed:
+bind -n M-Enter   split-window -v -c "#{pane_current_path}"  # Alt+Enter       → split top/bottom
+bind -n M-S-Enter split-window -h -c "#{pane_current_path}"  # Alt+Shift+Enter → split side/side
+bind -n M-Escape  kill-pane                                  # Alt+Escape      → close the focused pane
 bind | split-window -h -c "#{pane_current_path}"      # | → split left/right
 bind - split-window -v -c "#{pane_current_path}"      # - → split top/bottom
 bind \\ split-window -h -c "#{pane_current_path}"      # \ → same as | (easier to reach)
@@ -101,6 +124,14 @@ bind x kill-pane                                       # x → close the focused
 "#{pane_current_path}"` opens the new pane in the **same directory** as the
 current one — without it, splits open in `$HOME`. The `|` and `-` mnemonics
 match the shape of the resulting divider.
+
+The `bind -n M-*` lines are **prefix-free** (`-n` = the root key table) and are
+ported verbatim from omarchy's `dev` branch so the muscle memory carries over
+from the Linux machine — you split without touching the prefix at all. On macOS
+they fire from the **left** ⌥ (Option) key, because Ghostty is set to
+`macos-option-as-alt = left` (right ⌥ still types accented characters). This is
+also the escape hatch when the `Ctrl+Space` prefix is being swallowed by macOS
+(see the input-source heads-up above).
 
 ```tmux
 bind -n C-M-Left  select-pane -L      # Ctrl+Alt+Left  → focus pane to the left
