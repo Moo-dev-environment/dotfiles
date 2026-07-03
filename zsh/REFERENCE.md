@@ -24,12 +24,17 @@ configured in this zsh setup.
 
 ```
 zsh/
-  .zshrc        # Single-file config (env, options, completion, keybinds,
-                #   fzf, plugins, prompt, aliases, functions, tool hooks)
-  .zprofile     # Login-shell hook (currently empty; reserved)
-  README.md     # Install, ordering invariants, design notes
-  REFERENCE.md  # This file — full cheatsheet
+  .zshrc            # Thin loader — sources conf.d/*.zsh in filename order
+  .zprofile         # Login-shell hook (~/.local/bin/env toolchain shim)
+  conf.d/           # The actual config, one numbered module per concern:
+    00-os  10-env  20-options  30-completion  40-keybindings  50-fzf
+    55-plugins  60-prompt  65-aliases  70-git  72-dev  74-tmux
+    76-functions  78-media  80-linux  82-macos  88-hooks  90-tools
+  README.md         # Install, ordering invariants, design notes
+  REFERENCE.md      # This file — full cheatsheet
 ```
+
+`~/.zshrc.local` (untracked) is sourced last for machine-local overrides.
 
 See **[README.md](README.md)** for the load order, ordering invariants,
 and rationale behind non-obvious choices (FZF bind quoting,
@@ -204,6 +209,7 @@ With `eza` (preferred):
 | `l`   | Single-column listing                                |
 | `ll`  | Long listing with git status and icons               |
 | `la`  | Long listing including hidden files                  |
+| `lsa` | Same as `la` (Omarchy muscle memory)                 |
 | `lt`  | Tree view, 2 levels deep (long, with git)            |
 | `lta` | Tree view, 2 levels deep (include hidden)            |
 
@@ -216,7 +222,8 @@ Fallback (`ls`): `ls -G` (macOS) or `ls --color=auto` (Linux).
 | `cat`   | `bat --paging=never`                 | bat      |
 | `catp`  | `bat` (with default paging)          | bat      |
 | `batp`  | `bat --paging=always`                | bat      |
-| `ff`    | `fzf` with bat preview               | fzf, bat |
+
+(`ff` is now a **function** — see [FZF-Powered Interactive](#fzf-powered-interactive).)
 
 ### Modern CLI Replacements
 
@@ -255,6 +262,7 @@ any archive format.
 | `gcm`    | `git commit -m`                         |                                     |
 | `gca`    | `git commit --amend --no-edit`          | Amend without changing message      |
 | `gcam`   | `git commit --amend`                    | Amend with message edit             |
+| `gcad`   | `git commit -a --amend`                 | Stage tracked changes + amend (Omarchy) |
 | `gd`     | `git diff`                              |                                     |
 | `gds`    | `git diff --staged`                     |                                     |
 | `gdc`    | `git diff HEAD~1`                       | Diff vs previous commit             |
@@ -315,6 +323,17 @@ any archive format.
 | `tka`    | `tmux kill-server`                   |                                |
 | `tw`     | `tmux attach \|\| tmux new -s Work`  | Quick attach or create Work    |
 | `tmuxrc` | Open tmux config in `$EDITOR`        |                                |
+| `ic`     | `tdl c`                              | Dev layout + opencode          |
+| `ix`     | `tdl cx`                             | Dev layout + claude (bypass)   |
+| `icx`    | `tdl c cx`                           | Dev layout + both AIs          |
+
+### AI / App shortcuts (Omarchy)
+
+| Alias | Expands to                                        | Notes                          |
+|-------|---------------------------------------------------|--------------------------------|
+| `c`   | `opencode`                                        |                                |
+| `cx`  | clear screen + `claude --permission-mode bypassPermissions` |                      |
+| `r`   | `rails`                                           |                                |
 
 ### Node / npm
 
@@ -401,14 +420,16 @@ any archive format.
 
 ### FZF-Powered Interactive
 
-| Function | Usage   | What it does                                          |
-|----------|---------|-------------------------------------------------------|
-| `fcd`    | `fcd`   | Fuzzy cd into any subdirectory (fd or find backend)   |
-| `fkill`  | `fkill` | Interactively select and kill a process               |
-| `fhist`  | `fhist` | Fuzzy search history, place selection in input buffer |
-| `fenv`   | `fenv`  | Fuzzy search environment variables                    |
-| `eff`    | `eff`   | fzf-pick a file then open in `$EDITOR`                |
-| `fman`   | `fman`  | Fuzzy search man pages with preview                   |
+| Function | Usage             | What it does                                          |
+|----------|-------------------|-------------------------------------------------------|
+| `ff`     | `ff` (or pipe in) | fzf file picker with `bat` preview (plain `cat` fallback) |
+| `eff`    | `eff`             | fzf-pick a file then open in `$EDITOR`                |
+| `sff`    | `sff host:/tmp/`  | fzf-pick newest file, `scp` it to a remote (Omarchy)  |
+| `fcd`    | `fcd`             | Fuzzy cd into any subdirectory (fd or find backend)   |
+| `fkill`  | `fkill`           | Interactively select and kill a process               |
+| `fhist`  | `fhist`           | Fuzzy search history, place selection in input buffer |
+| `fenv`   | `fenv`            | Fuzzy search environment variables                    |
+| `fman`   | `fman`            | Fuzzy search man pages with preview                   |
 
 ### Git
 
@@ -445,6 +466,7 @@ any archive format.
 | Function | Usage                       | What it does                                               |
 |----------|-----------------------------|------------------------------------------------------------|
 | `tdl`    | `tdl claude` or `tdl claude aider` | Dev layout: editor left, one or two AI panes right  |
+| `tds`    | `tds`                       | Dev square: editor + `hunk diff --watch` / terminal + opencode (Omarchy) |
 | `tdlm`   | `tdlm claude`               | One `tdl` window per subdirectory (monorepo layout)        |
 | `tsl`    | `tsl 3 claude`              | N panes side-by-side, same command in each (swarm layout)  |
 
@@ -565,6 +587,7 @@ so they can override builtins after all other config is loaded.
 | `mise`    | Activates per-project tool versions from `.tool-versions` or `.mise.toml`.   |
 | `thefuck` | Corrects the previous command; use the `fuck` command after a typo.           |
 | `atuin`   | Replaces `Ctrl-R` with a TUI that syncs history across machines (if installed). Up-arrow is left for history-substring-search. |
+| `try`     | Scratch project dirs under `~/Work/tries` (Omarchy). Lazy-loaded: first call pays the init cost, startup pays nothing. |
 
 Terminal title is also updated on `chpwd` to show the current directory
 (works in xterm-compatible terminals, iTerm2, Ghostty).
@@ -575,7 +598,7 @@ Terminal title is also updated on `chpwd` to show the current directory
 
 ### OS Detection (`_os`)
 
-Set in `01-environment.zsh`, referenced throughout all modules.
+Set in `conf.d/00-os.zsh`, referenced throughout all modules.
 
 | Value   | When                                                            |
 |---------|-----------------------------------------------------------------|
@@ -620,7 +643,8 @@ replacement isn't installed. Core operations always work.
 | `zsh-defer`               | Shell startup is already fast. No performance problem to solve.             |
 | `fast-syntax-highlighting`| Marginal speed difference vs zsh-syntax-highlighting at this config size.  |
 | `zsh-vi-mode`             | Would change the emacs-mode workflow. Major habit change, not an improvement. |
-| Modular XDG `ZDOTDIR`     | Would require a `.zshenv` + changing how zsh finds its config. More complexity than a single `.zshrc`. |
+| XDG `ZDOTDIR` relocation  | Modularity is done via `conf.d/` sourcing instead — no `.zshenv` bootstrap needed, `~/.zshrc` stays a plain symlink. |
+| `omarchy-transcode` delegation | That binary only exists on Omarchy; the inline ffmpeg/imagemagick functions are portable. |
 | `inc_append_history`      | `share_history` already writes entries incrementally. Enabling both causes confusing ordering and apparent duplicates across concurrent shells. |
 | `url-quote-magic`         | Binding it to `self-insert` causes typing lag in modern terminals. `bracketed-paste-magic` alone handles safe pasting. |
 
@@ -656,6 +680,17 @@ sudo apt install bat eza fd-find fzf ripgrep zoxide direnv jq \
 # Install via their official installers or cargo
 curl -sS https://starship.rs/install.sh | sh
 curl https://mise.run | sh
+```
+
+### Optional: Tokyo Night theme for bat
+
+`BAT_THEME` falls back to the built-in `ansi` unless the theme is properly
+installed (file present **and** cache built):
+
+```sh
+mkdir -p ~/.config/bat/themes && cd ~/.config/bat/themes
+curl -LO https://raw.githubusercontent.com/folke/tokyonight.nvim/main/extras/sublime/tokyonight_night.tmTheme
+bat cache --build
 ```
 
 ### Rebuild completion cache after installing new tools

@@ -16,18 +16,20 @@ there for any tool you want to understand.
 | **Waybar** | Top status bar | [`waybar/README.md`](waybar/README.md) | `~/.config/waybar` → `waybar/` |
 | **tmux** | Terminal multiplexer (panes/sessions) | [`tmux/README.md`](tmux/README.md) | `~/.config/tmux/tmux.conf` → `tmux/tmux.conf` |
 | **Neovim** | Editor (LazyVim + CP workflow) | [`nvim/README.md`](nvim/README.md) · [`nvim/docs/`](nvim/docs/README.md) | `~/.config/nvim` → `nvim/` |
-| **bash** | Login shell (the active one) | [`bash/README.md`](bash/README.md) | **copy only** — not symlinked |
+| **bash** | Login shell on the Omarchy box | [`bash/README.md`](bash/README.md) | **copy only** — not symlinked |
 | **Alacritty** | GPU terminal emulator | [`alacritty/README.md`](alacritty/README.md) | `~/.config/alacritty` → `alacritty/` |
 | **Starship** | Shell prompt | [`starship/README.md`](starship/README.md) | `~/.config/starship.toml` → `starship/starship.toml` |
 | **Fastfetch** | System-info screenshot tool | [`fastfetch/README.md`](fastfetch/README.md) | `~/.config/fastfetch` → `fastfetch/` |
 | **clangd** | C/C++ language server config | [`clangd/README.md`](clangd/README.md) | **not deployed** — `~/.config/clangd/` is absent |
-| **zsh** | Shell config (dormant) | [`zsh/README.md`](zsh/README.md) · [`zsh/REFERENCE.md`](zsh/REFERENCE.md) | not symlinked — legacy, bash is the login shell |
+| **zsh** | Interactive shell (primary on macOS) — modular `conf.d/` config | [`zsh/README.md`](zsh/README.md) · [`zsh/REFERENCE.md`](zsh/REFERENCE.md) | `~/.zshrc` → `zsh/.zshrc`, `~/.zprofile` → `zsh/.zprofile` (macOS) |
 
 > **Not everything is symlinked.** **bash** files (`~/.bashrc`, …) are **copied**
-> here for reference, not linked — editing `bash/` doesn't change the live shell.
-> **zsh** is **dormant** (bash is the login shell) and not linked. **clangd**'s
-> config lives in the repo but isn't currently symlinked into `~/.config/clangd/`.
-> See each tool's README for specifics.
+> here for reference, not linked — editing `bash/` doesn't change the live shell
+> on the Omarchy box. **zsh** is the primary shell on macOS and IS symlinked
+> there (it merges the old single-file zsh config with the Omarchy bash gems —
+> see `zsh/README.md`). **clangd**'s config lives in the repo but isn't
+> currently symlinked into `~/.config/clangd/`. See each tool's README for
+> specifics.
 
 ## How the symlink model works
 
