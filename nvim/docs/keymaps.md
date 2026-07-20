@@ -37,6 +37,21 @@ visible after the program exits.
 | `<leader>tp`   | Receive full problem (creates source + tests)       |
 | `<leader>tc`   | Receive entire contest                              |
 
+## Jupyter notebooks (`lua/plugins/jupyter.lua`)
+
+Under the `<leader>j` group. Full workflow in [`jupyter.md`](jupyter.md).
+
+| Keys | Action |
+|------|--------|
+| `<leader>ji` / `<leader>jI` | Init `datascience` kernel / choose kernel |
+| `<leader>jc` / `<leader>jj` | Run cell / run cell and advance |
+| `<leader>jl` / `<leader>jv` | Run line / run visual selection |
+| `<leader>jr` | Re-run current cell |
+| `<leader>jo` / `<leader>jO` / `<leader>jh` | Show / enter / hide output |
+| `<leader>je` / `<leader>jn` | Export outputs → `.ipynb` / import from `.ipynb` |
+| `<leader>jx` / `<leader>jR` | Interrupt / restart kernel |
+| `]j` / `[j` | Next / previous `# %%` cell |
+
 ## Editor & navigation tools
 
 Full how-to with examples in [`tools.md`](tools.md); this is just the key list.

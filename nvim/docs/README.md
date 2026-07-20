@@ -22,6 +22,7 @@ dial, undotree, diffview, Copilot, …) documented in [`tools.md`](tools.md).
 │   ├── plugins/                     user plugin specs (added on top of LazyVim)
 │   │   ├── competitest.lua          CP test-case manager
 │   │   ├── cpp.lua                  C/C++ tooling (Mason pins, conform style, <leader>rD)
+│   │   ├── jupyter.lua              Jupyter notebooks (jupytext + molten + image, <leader>j)
 │   │   ├── leetcode.lua             LeetCode in-editor (:Leet)
 │   │   ├── copilot_config.lua       Copilot inline suggestions
 │   │   ├── treesitter-context.lua   sticky scope header

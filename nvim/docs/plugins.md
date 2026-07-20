@@ -47,6 +47,18 @@ and adds `<leader>rD` keymap to compile with `-O0 -g3` and launch
 `codelldb`, auto-piping `input.txt` / `in.txt` / `stdin.txt` on stdin.
 See [`cpp.md`](cpp.md) for the full C/C++ workflow.
 
+### `jupyter.lua`
+
+Jupyter notebooks in-editor — three cooperating plugins:
+[jupytext.nvim](https://github.com/GCBallesteros/jupytext.nvim) (`.ipynb` ⇄
+`# %%` text), [molten-nvim](https://github.com/benlubas/molten-nvim) (run cells
+on a live kernel), and [image.nvim](https://github.com/3rd/image.nvim) (inline
+plots via Ghostty's kitty graphics). Keymaps under `<leader>j`. Depends on two
+venvs (`~/.venvs/nvim` host, `~/.venvs/ds` kernel) — see
+[`jupyter.md`](jupyter.md) for setup, the `%matplotlib inline` requirement, and
+troubleshooting. Molten is a Python remote plugin, so its spec carries
+`build = ":UpdateRemotePlugins"`.
+
 ### Editor / QoL tools
 
 How to *use* these is in [`tools.md`](tools.md); this is just what each file
