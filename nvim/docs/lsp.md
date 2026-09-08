@@ -27,6 +27,11 @@ mason-tool-installer, both wired by LazyVim).
 | lua      | `stylua`             | LazyVim default |
 | sh       | `shfmt`              | LazyVim default |
 
+Python defaults to the shared Python 3.12 ML environment at
+`~/.venvs/ds`. Pyright resolves installed ML imports from that interpreter;
+Neotest also uses it. Use `<leader>cv` (`:VenvSelect`) when a project needs its
+own environment.
+
 Format-on-save is on by default. Toggles:
 
 - `:LazyFormatInfo` — show what would format the current buffer.

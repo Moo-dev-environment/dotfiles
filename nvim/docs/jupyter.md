@@ -22,10 +22,11 @@ Neovim's ability to talk to Python:
 | venv | Contents | Purpose |
 |------|----------|---------|
 | `~/.venvs/nvim` | `pynvim`, `jupyter_client`, `jupytext` | Neovim's Python 3 host (`vim.g.python3_host_prog`, set in [`options.lua`](../lua/config/options.lua)). Molten runs here. |
-| `~/.venvs/ds` | `ipykernel`, `numpy`, `pandas`, `matplotlib`, `scipy` | Registered as the Jupyter kernel **"Python (datascience)"**. Every notebook uses it. |
+| `~/.venvs/ds` | Shared Python 3.12 ML/data-science stack | Registered as the Jupyter kernel **"Python (datascience)"**. It is also the default Python environment in the shell and Neovim. |
 
-Add libraries to the kernel anytime: `~/.venvs/ds/bin/pip install <pkg>`
-(no re-registration needed).
+Add libraries globally anytime with `pip install <pkg>` from a new terminal,
+or explicitly with `~/.venvs/ds/bin/python -m pip install <pkg>` (no kernel
+re-registration needed).
 
 ### Recreating the environment (new machine)
 
@@ -35,11 +36,15 @@ python3 -m venv ~/.venvs/nvim
 ~/.venvs/nvim/bin/pip install pynvim jupyter_client jupytext
 
 # Kernel venv + register it
-python3 -m venv ~/.venvs/ds
+python3.12 -m venv ~/.venvs/ds
 ~/.venvs/ds/bin/pip install ipykernel numpy pandas matplotlib scipy
 ~/.venvs/ds/bin/python -m ipykernel install --user \
   --name datascience --display-name "Python (datascience)"
 ```
+
+On macOS, `~/.zshrc.local` prepends `~/.venvs/ds/bin` and sets `VIRTUAL_ENV`,
+making this one per-user environment available from every directory. Neovim's
+`options.lua` applies the equivalent environment when launched from the GUI.
 
 Then in nvim: `:Lazy sync` (installs the three plugins; Molten's build step
 runs `:UpdateRemotePlugins` to register the remote plugin). Requires the

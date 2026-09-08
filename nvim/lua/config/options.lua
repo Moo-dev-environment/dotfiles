@@ -16,3 +16,15 @@ local nvim_py = vim.fn.expand("~/.venvs/nvim/bin/python")
 if vim.fn.executable(nvim_py) == 1 then
   vim.g.python3_host_prog = nvim_py
 end
+
+-- Use the machine-wide data-science environment for Python commands and LSP
+-- import discovery, including when Neovim is launched outside a terminal.
+-- The remote-plugin host above intentionally stays isolated in ~/.venvs/nvim.
+local ds_venv = vim.fn.expand("~/.venvs/ds")
+local ds_bin = ds_venv .. "/bin"
+if vim.fn.executable(ds_bin .. "/python") == 1 then
+  vim.env.VIRTUAL_ENV = ds_venv
+  if not vim.env.PATH:find(ds_bin, 1, true) then
+    vim.env.PATH = ds_bin .. ":" .. vim.env.PATH
+  end
+end
